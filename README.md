@@ -83,6 +83,8 @@ Third party components
 
 **glslang** by **KhronosGroup**: [github](https://github.com/KhronosGroup/glslang)
 
+**cJSON** by **DaveGamble**: [github](https://github.com/DaveGamble/cJSON)
+
 Sponsor
 ====
 
