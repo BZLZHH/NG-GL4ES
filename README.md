@@ -28,7 +28,7 @@ Features
 
 2. Be able to render some minecraft shaders;
 
-3. Be able to run Minecraft in high version(like Minecraft 1.21.4).
+3. Be able to run Minecraft in high version(like Minecraft 1.21.4 and Minecraft 1.12.2).
 
 Usage
 ====
