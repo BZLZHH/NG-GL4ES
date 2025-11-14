@@ -2,6 +2,43 @@ cmake_minimum_required(VERSION 3.10)
 
 project(ng_gl4es)
 
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT LTOSupported OUTPUT LTOError)
+    if (LTOSupported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+        add_compile_options(-g0 -O3 -ffunction-sections -fdata-sections)
+        add_link_options(-Wl,--gc-sections)
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        add_compile_options(/O2 /GL)
+    endif()
+endif()
+
+# glslang & SPIRV-Cross
+
+set(ENABLE_RTTI                ON  CACHE BOOL "Enables RTTI (will be took by glslang)" FORCE)
+set(ENABLE_HLSL                OFF CACHE BOOL "Disable HLSL input for glslang" FORCE)
+set(BUILD_EXTERNAL             OFF CACHE BOOL "Disable build external dependencies for glslang" FORCE)
+set(ENABLE_GLSLANG_BINARIES    OFF CACHE BOOL "Disable glslangValidator/spirv-remap" FORCE)
+set(ENABLE_OPT                 OFF CACHE BOOL "Disable SPIRV-Tools opt usage in glslang" FORCE)
+set(BUILD_EXTERNAL             OFF CACHE BOOL "Don't build external deps in External/" FORCE)
+
+set(SPIRV_CROSS_ENABLE_C_API   ON  CACHE BOOL "Enable C API" FORCE)
+set(SPIRV_CROSS_ENABLE_GLSL    ON  CACHE BOOL "Enable GLSL backend" FORCE)
+set(SPIRV_CROSS_ENABLE_REFLECT OFF CACHE BOOL "Disable reflect" FORCE)
+set(SPIRV_CROSS_ENABLE_HLSL    OFF CACHE BOOL "Disable HLSL backend" FORCE)
+set(SPIRV_CROSS_ENABLE_MSL     OFF CACHE BOOL "Disable MSL backend" FORCE)
+set(SPIRV_CROSS_ENABLE_CPP     OFF CACHE BOOL "Disable C++ API target" FORCE)
+set(SPIRV_CROSS_CLI            OFF CACHE BOOL "Disable CLI binary" FORCE)
+set(SPIRV_CROSS_STATIC         ON  CACHE BOOL "Prefer static libs" FORCE)
+set(SPIRV_CROSS_ENABLE_UTIL    OFF  CACHE BOOL "Disable util" FORCE)
+
+add_subdirectory(3rdparty/glslang)
+add_subdirectory(3rdparty/SPIRV-Cross)
+
 enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -17,122 +54,110 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -DNO_GBM -DDEFAULT_ES=3 -fvisibility=hidden")
 
 if(ANDROID)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOX11")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOX11")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include )
 
 set(C_SRC_FILES
-        src/gl/string_utils.c
-        src/gl/cJSON.c
-        src/gl/config.c
-        src/gl/arbconverter.c
-        src/gl/arbgenerator.c
-        src/gl/arbhelper.c
-        src/gl/arbparser.c
-        src/gl/array.c
-        src/gl/blend.c
-        src/gl/blit.c
-        src/gl/buffers.c
-        src/gl/build_info.c
-        src/gl/debug.c
-        src/gl/decompress.c
-        src/gl/depth.c
-        src/gl/directstate.c
-        src/gl/drawing.c
-        src/gl/enable.c
-        src/gl/envvars.c
-        src/gl/eval.c
-        src/gl/face.c
-        src/gl/fog.c
-        src/gl/fpe.c
-        src/gl/fpe_cache.c
-        src/gl/fpe_shader.c
-        src/gl/framebuffers.c
-        src/gl/gl_lookup.c
-        src/gl/gl4es.c
-        src/gl/glstate.c
-        src/gl/hint.c
-        src/gl/init.c
-        src/gl/light.c
-        src/gl/line.c
-        src/gl/list.c
-        src/gl/listdraw.c
-        src/gl/listrl.c
-        src/gl/loader.c
-        src/gl/logs.c
-        src/gl/matrix.c
-        src/gl/matvec.c
-        src/gl/oldprogram.c
-        src/gl/pixel.c
-        src/gl/planes.c
-        src/gl/pointsprite.c
-        src/gl/preproc.c
-        src/gl/program.c
-        src/gl/queries.c
-        src/gl/raster.c
-        src/gl/render.c
-        src/gl/shader.c
-        src/gl/shaderconv.c
-        src/gl/shader_hacks.c
-        src/gl/stack.c
-        src/gl/stencil.c
-        src/gl/stubs.c
-        src/gl/texenv.c
-        src/gl/texgen.c
-        src/gl/texture.c
-        src/gl/texture_compressed.c
-        src/gl/texture_params.c
-        src/gl/texture_read.c
-        src/gl/texture_3d.c
-        src/gl/uniform.c
-        src/gl/vertexattrib.c
-        src/gl/wrap/gl4eswraps.c
-        src/gl/wrap/gles.c
-        src/gl/wrap/glstub.c
-        src/gl/wrap/glesnative.cpp
-        src/gl/math/matheval.c
-        src/glx/hardext.c
-        src/glx/lookup.c
-        src/glx/gbm.c
-        src/glx/streaming.c
-        src/gl/vgpu/shaderconv.c
-        src/gl/samplers.c
-        )
+    src/gl/string_utils.c
+    src/gl/cJSON.c
+    src/gl/config.c
+    src/gl/arbconverter.c
+    src/gl/arbgenerator.c
+    src/gl/arbhelper.c
+    src/gl/arbparser.c
+    src/gl/array.c
+    src/gl/blend.c
+    src/gl/blit.c
+    src/gl/buffers.c
+    src/gl/build_info.c
+    src/gl/debug.c
+    src/gl/decompress.c
+    src/gl/depth.c
+    src/gl/directstate.c
+    src/gl/drawing.c
+    src/gl/enable.c
+    src/gl/envvars.c
+    src/gl/eval.c
+    src/gl/face.c
+    src/gl/fog.c
+    src/gl/fpe.c
+    src/gl/fpe_cache.c
+    src/gl/fpe_shader.c
+    src/gl/framebuffers.c
+    src/gl/gl_lookup.c
+    src/gl/gl4es.c
+    src/gl/glstate.c
+    src/gl/hint.c
+    src/gl/init.c
+    src/gl/light.c
+    src/gl/line.c
+    src/gl/list.c
+    src/gl/listdraw.c
+    src/gl/listrl.c
+    src/gl/loader.c
+    src/gl/logs.c
+    src/gl/matrix.c
+    src/gl/matvec.c
+    src/gl/oldprogram.c
+    src/gl/pixel.c
+    src/gl/planes.c
+    src/gl/pointsprite.c
+    src/gl/preproc.c
+    src/gl/program.c
+    src/gl/queries.c
+    src/gl/raster.c
+    src/gl/render.c
+    src/gl/shader.c
+    src/gl/shaderconv.c
+    src/gl/shader_hacks.c
+    src/gl/stack.c
+    src/gl/stencil.c
+    src/gl/stubs.c
+    src/gl/texenv.c
+    src/gl/texgen.c
+    src/gl/texture.c
+    src/gl/texture_compressed.c
+    src/gl/texture_params.c
+    src/gl/texture_read.c
+    src/gl/texture_3d.c
+    src/gl/uniform.c
+    src/gl/vertexattrib.c
+    src/gl/wrap/gl4eswraps.c
+    src/gl/wrap/gles.c
+    src/gl/wrap/glstub.c
+    src/gl/wrap/glesnative.cpp
+    src/gl/math/matheval.c
+    src/glx/hardext.c
+    src/glx/lookup.c
+    src/glx/gbm.c
+    src/glx/streaming.c
+    src/gl/vgpu/shaderconv.c
+    src/gl/samplers.c
+)
 
 if(NOT ANDROID)
     list(APPEND C_SRC_FILES src/glx/glx.c)
 endif()
 
 set(CPP_SRC_FILES
-        src/gl/glsl/glsl_for_es.cpp
-        src/gl/getter.cpp
-        )
+    src/gl/glsl/glsl_for_es.cpp
+    src/gl/getter.cpp
+)
 
 set(SRC_FILES ${CPP_SRC_FILES} ${C_SRC_FILES})
 
-find_library(GLSLANG_LIB glslang PATHS ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/)
-
 add_library(ng_gl4es SHARED ${SRC_FILES})
+
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+    glslang::glslang
+    spirv-cross-c
+)
 
 if(MACOS)
     # iOS
-    set(iOS_LIB_DIR ${CMAKE_SOURCE_DIR}/library/ios)
-    target_link_libraries(${CMAKE_PROJECT_NAME}
-        ${iOS_LIB_DIR}/libglslang.a
-        ${iOS_LIB_DIR}/libspirv-cross-c-shared.dylib
-        ${iOS_LIB_DIR}/libGenericCodeGen.a
-        ${iOS_LIB_DIR}/libglslang-default-resource-limits.a
-        ${iOS_LIB_DIR}/libMachineIndependent.a
-        ${iOS_LIB_DIR}/libOSDependent.a
-        ${iOS_LIB_DIR}/libSPIRV-Tools-diff.a
-        ${iOS_LIB_DIR}/libSPIRV-Tools-link.aBuffer
-        ${iOS_LIB_DIR}/libSPIRV-Tools-lint.a
-        ${iOS_LIB_DIR}/libSPIRV-Tools-opt.a
-        ${iOS_LIB_DIR}/libSPIRV-Tools-reduce.a
-        ${iOS_LIB_DIR}/libSPIRV-Tools.a
-        ${iOS_LIB_DIR}/libSPIRV.a
-        ${iOS_LIB_DIR}/libSPVRemapper.a
+    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
         "-F${CMAKE_SOURCE_DIR}/external"
         "-framework libEGL"
         "-framework libGLESv2"
@@ -143,48 +168,19 @@ if(MACOS)
 else()
 if(ANDROID)
     # Android
-    find_library(GLSLANG_LIB glslang PATHS ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/)
-    target_link_libraries(${CMAKE_PROJECT_NAME}
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libglslang.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libspirv-cross-c-shared.so
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libGenericCodeGen.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libglslang-default-resource-limits.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libMachineIndependent.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libOSDependent.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV-Tools-diff.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV-Tools-link.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV-Tools-lint.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV-Tools-opt.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV-Tools-reduce.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV-Tools.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPIRV.a
-        ${CMAKE_SOURCE_DIR}/library/android/${ANDROID_ABI}/libSPVRemapper.a
+    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
         android
         log
     )
 else()
-    # Linux
-    # TODO: support more architectures.
-    find_library(GLSLANG_LIB glslang PATHS ${CMAKE_SOURCE_DIR}/library/linux/x86_64)
-    target_link_libraries(${CMAKE_PROJECT_NAME}
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libglslang.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libspirv-cross-c-shared.so
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libGenericCodeGen.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libglslang-default-resource-limits.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libMachineIndependent.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libOSDependent.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV-Tools-diff.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV-Tools-link.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV-Tools-lint.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV-Tools-opt.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV-Tools-reduce.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV-Tools.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPIRV.a
-        ${CMAKE_SOURCE_DIR}/library/linux/x86_64/libSPVRemapper.a
-    )
+    # Nothing to link
 endif()
 endif()
 
 target_include_directories(ng_gl4es PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
-        )
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
+    LINK_FLAGS "-Wl,--strip-all"
+)

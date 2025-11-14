@@ -1,4 +1,5 @@
-// Copyright (C) 2020 The Khronos Group Inc.
+//
+// Copyright (C) 2015-2016 Google, Inc.
 //
 // All rights reserved.
 //
@@ -14,7 +15,7 @@
 //    disclaimer in the documentation and/or other materials provided
 //    with the distribution.
 //
-//    Neither the name of The Khronos Group Inc. nor the names of its
+//    Neither the name of Google Inc. nor the names of its
 //    contributors may be used to endorse or promote products derived
 //    from this software without specific prior written permission.
 //
@@ -31,32 +32,25 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GLSLANG_BUILD_INFO
-#define GLSLANG_BUILD_INFO
+//
+// Visit the nodes in the glslang intermediate tree representation to
+// propagate 'noContraction' qualifier.
+//
 
-#define GLSLANG_VERSION_MAJOR 15
-#define GLSLANG_VERSION_MINOR 4
-#define GLSLANG_VERSION_PATCH 0
-#define GLSLANG_VERSION_FLAVOR ""
+#pragma once
 
-#define GLSLANG_VERSION_GREATER_THAN(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) > (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) > (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH) > (patch)))))
+#include "../Include/intermediate.h"
 
-#define GLSLANG_VERSION_GREATER_OR_EQUAL_TO(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) > (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) > (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH >= (patch))))))
+namespace glslang {
 
-#define GLSLANG_VERSION_LESS_THAN(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) < (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) < (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH) < (patch)))))
+// Propagates the 'precise' qualifier for objects (objects marked with
+// 'noContraction' qualifier) from the shader source specified 'precise'
+// variables to all the involved objects, and add 'noContraction' qualifier for
+// the involved arithmetic operations.
+// Note that the same qualifier: 'noContraction' is used in both object nodes
+// and arithmetic operation nodes, but has different meaning. For object nodes,
+// 'noContraction' means the object is 'precise'; and for arithmetic operation
+// nodes, it means the operation should not be contracted.
+void PropagateNoContraction(const glslang::TIntermediate& intermediate);
 
-#define GLSLANG_VERSION_LESS_OR_EQUAL_TO(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) < (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) < (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH <= (patch))))))
-
-#endif // GLSLANG_BUILD_INFO
+} // end namespace glslang

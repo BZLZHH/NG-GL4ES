@@ -1,5 +1,7 @@
-// Copyright (C) 2020 The Khronos Group Inc.
+#ifndef _PCH_H
+#define _PCH_H
 //
+// Copyright (C) 2018 The Khronos Group Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -14,7 +16,7 @@
 //    disclaimer in the documentation and/or other materials provided
 //    with the distribution.
 //
-//    Neither the name of The Khronos Group Inc. nor the names of its
+//    Neither the name of 3Dlabs Inc. Ltd. nor the names of its
 //    contributors may be used to endorse or promote products derived
 //    from this software without specific prior written permission.
 //
@@ -30,33 +32,18 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+//
+#include <sstream>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <climits>
+#include <iostream>
+#include <sstream>
+#include <memory>
+#include "SymbolTable.h"
+#include "ParseHelper.h"
+#include "Scan.h"
+#include "ScanContext.h"
 
-#ifndef GLSLANG_BUILD_INFO
-#define GLSLANG_BUILD_INFO
-
-#define GLSLANG_VERSION_MAJOR 15
-#define GLSLANG_VERSION_MINOR 4
-#define GLSLANG_VERSION_PATCH 0
-#define GLSLANG_VERSION_FLAVOR ""
-
-#define GLSLANG_VERSION_GREATER_THAN(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) > (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) > (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH) > (patch)))))
-
-#define GLSLANG_VERSION_GREATER_OR_EQUAL_TO(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) > (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) > (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH >= (patch))))))
-
-#define GLSLANG_VERSION_LESS_THAN(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) < (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) < (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH) < (patch)))))
-
-#define GLSLANG_VERSION_LESS_OR_EQUAL_TO(major, minor, patch) \
-    ((GLSLANG_VERSION_MAJOR) < (major) || ((major) == GLSLANG_VERSION_MAJOR && \
-    ((GLSLANG_VERSION_MINOR) < (minor) || ((minor) == GLSLANG_VERSION_MINOR && \
-     (GLSLANG_VERSION_PATCH <= (patch))))))
-
-#endif // GLSLANG_BUILD_INFO
+#endif /* _PCH_H */
