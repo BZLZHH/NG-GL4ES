@@ -262,6 +262,100 @@ char* replace_version_line_460(const char* text) {
     return strdup(text);
 }
 
+static char* force_replace_version(const char* text, const char* new_version_line) {
+    if (!text) return NULL;
+
+    const char* version_tag = "#version";
+    const char* p = text;
+    // Skip leading whitespace
+    while (*p && isspace((unsigned char)*p)) p++;
+
+    // Check if the source starts with #version
+    if (strncmp(p, version_tag, strlen(version_tag)) == 0) {
+        const char* first_line_end = strchr(p, '\n');
+        if (!first_line_end) {
+            first_line_end = p + strlen(p); // Handle single-line shaders
+        }
+
+        // Calculate the start of the rest of the code
+        const char* rest_of_code = first_line_end;
+        if (*rest_of_code == '\n') {
+            rest_of_code++; // Move past the newline character
+        }
+
+        // Allocate memory and build the new shader string
+        size_t new_version_len = strlen(new_version_line);
+        size_t rest_len = strlen(rest_of_code);
+        char* new_text = (char*)malloc(new_version_len + 1 + rest_len + 1); // +1 for newline, +1 for null terminator
+        if (!new_text) return NULL;
+
+        strcpy(new_text, new_version_line);
+        strcat(new_text, "\n");
+        strcat(new_text, rest_of_code);
+
+        return new_text;
+    }
+
+    // If #version is not found at the beginning, insert the new version line at the top
+    size_t text_len = strlen(text);
+    size_t new_version_len = strlen(new_version_line);
+    char* new_text = (char*)malloc(new_version_len + 1 + text_len + 1);
+    if (!new_text) return NULL;
+
+    strcpy(new_text, new_version_line);
+    strcat(new_text, "\n");
+    strcat(new_text, text);
+
+    return new_text;
+}
+
+static char* insert_after_preamble(const char* text, const char* insert_str) {
+    if (!text || !insert_str) return NULL;
+
+    const char* p = text;
+    const char* last_preamble_pos = text;
+
+    // Find the end of the preamble (all lines starting with #, comments, or are empty)
+    while (*p) {
+        const char* line_start = p;
+
+        // Skip leading whitespace
+        while (*p && (*p == ' ' || *p == '\t')) p++;
+
+        if (*p == '#' || (*p == '/' && *(p+1) == '/') || *p == '\n' || *p == '\r' || *p == '\0') {
+            // This line is a preprocessor, comment, or empty. Continue.
+            const char* line_end = strchr(line_start, '\n');
+            if (line_end) {
+                p = line_end + 1;
+                last_preamble_pos = p;
+            } else {
+                // End of string
+                last_preamble_pos = p + strlen(p);
+                break;
+            }
+        } else {
+            // First line of actual code found. We should insert before it.
+            break;
+        }
+    }
+
+    // Now, build the new string
+    size_t head_len = last_preamble_pos - text;
+    size_t insert_len = strlen(insert_str);
+    size_t tail_len = strlen(last_preamble_pos);
+
+    char* new_text = (char*)malloc(head_len + insert_len + tail_len + 1);
+    if (!new_text) return NULL;
+
+    memcpy(new_text, text, head_len);
+    memcpy(new_text + head_len, insert_str, insert_len);
+    memcpy(new_text + head_len + insert_len, last_preamble_pos, tail_len);
+    new_text[head_len + insert_len + tail_len] = '\0';
+
+    return new_text;
+}
+
+
 bool check_version_compatibility(const char* str) {
     if (str == NULL) {
         return false;
@@ -716,7 +810,80 @@ void APIENTRY_GL4ES gl4es_glShaderSource(GLuint shader, GLsizei count, const GLc
                     glshader->is_converted_essl_320 = 1;
                 }
             }
+
             DBG(SHUT_LOGD("\n[INFO] [Shader] Converted Shader source: \n%s", glshader->converted))
+
+
+            // ===================================================================
+            // === BEGIN ULTIMATE FIXUP PATCH v10 (The Final Stroke)
+            // ===================================================================
+            if (glshader->converted && (glshader->type == GL_VERTEX_SHADER || glshader->type == GL_FRAGMENT_SHADER)) {
+                //SHUT_LOGD("LIBGL: Executing ULTIMATE FIXUP PATCH v10 on Shader ID %d (Type: %s)\n", glshader->id, (glshader->type == GL_VERTEX_SHADER) ? "Vertex" : "Fragment");
+
+                // Part 1: Force the correct GLSL ES version for BOTH shaders
+                char target_version[32];
+                if (globals4es.esversion >= 320) sprintf(target_version, "#version 320 es");
+                else if (globals4es.esversion >= 310) sprintf(target_version, "#version 310 es");
+                else sprintf(target_version, "#version 300 es");
+
+                char* temp_v = force_replace_version(glshader->converted, target_version);
+                if (temp_v) { free(glshader->converted); glshader->converted = temp_v; }
+
+                // Part 2: Replace old texture2D with modern texture() for BOTH shaders
+                if (strstr(glshader->converted, "texture2D")) {
+                    char* temp_tex = replace_all(glshader->converted, "texture2D", "texture");
+                    if (temp_tex) { free(glshader->converted); glshader->converted = temp_tex; }
+                }
+
+                // Part 3: Handle keywords based on shader type
+                if (glshader->type == GL_VERTEX_SHADER) {
+                    // In Vertex Shaders, 'attribute' becomes 'in', and 'varying' becomes 'out'
+                    if (strstr(glshader->converted, "attribute")) {
+                        char* temp_ain = replace_all(glshader->converted, "attribute", "in");
+                        if (temp_ain) { free(glshader->converted); glshader->converted = temp_ain; }
+                    }
+                    if (strstr(glshader->converted, "varying")) {
+                        char* temp_vout = replace_all(glshader->converted, "varying", "out");
+                        if (temp_vout) { free(glshader->converted); glshader->converted = temp_vout; }
+                    }
+                } else { // This is a GL_FRAGMENT_SHADER
+                    // Part 3.5: Add the mandatory default precision for floats in Fragment Shaders
+                    if (!strstr(glshader->converted, "precision highp float")) {
+                        const char* precision_qualifier = "\nprecision highp float;\n";
+                        char* temp_prec = insert_after_first(glshader->converted, "\n", precision_qualifier);
+                        if (temp_prec) { free(glshader->converted); glshader->converted = temp_prec; }
+                    }
+
+                    // In Fragment Shaders, 'varying' becomes 'in'
+                    if (strstr(glshader->converted, "varying")) {
+                        char* temp_vin = replace_all(glshader->converted, "varying", "in");
+                        if (temp_vin) { free(glshader->converted); glshader->converted = temp_vin; }
+                    }
+
+                    // Part 4: Handle fragment-specific outputs (gl_FragColor/Data)
+                    const char* custom_out_var = "fragColor";
+                    int needs_out_declaration = 0;
+
+                    if (strstr(glshader->converted, "gl_FragColor")) {
+                        char* temp_fc = replace_all(glshader->converted, "gl_FragColor", custom_out_var);
+                        if (temp_fc) { free(glshader->converted); glshader->converted = temp_fc; needs_out_declaration = 1; }
+                    }
+                    if (strstr(glshader->converted, "gl_FragData[0]")) {
+                        char* temp_fd = replace_all(glshader->converted, "gl_FragData[0]", custom_out_var);
+                        if (temp_fd) { free(glshader->converted); glshader->converted = temp_fd; needs_out_declaration = 1; }
+                    }
+
+                    // If we need to declare our variable, do it smartly with precision
+                    if (needs_out_declaration && !strstr(glshader->converted, "out vec4 fragColor")) {
+                        const char* declaration = "\nout highp vec4 fragColor;\n";
+                        char* temp_decl = insert_after_preamble(glshader->converted, declaration);
+                        if (temp_decl) { free(glshader->converted); glshader->converted = temp_decl; }
+                    }
+                }
+            }
+            // ===================================================================
+            // === END ULTIMATE FIXUP PATCH v10
+            // ===================================================================
         }
         // send source to GLES2 hardware if any
         gles_glShaderSource(
