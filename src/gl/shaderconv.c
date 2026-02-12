@@ -941,11 +941,38 @@ char* ConvertShaderBuiltInVariableOnly(const char* pEntry, int isVertex, shaderc
     if (versionHeader > 1) {
         Tmp = ReplaceVariableName(Tmp, &tmpsize, "sample", "vgpu_Sample");
         Tmp = ReplaceVariableName(Tmp, &tmpsize, "texture", "vgpu_texture");
-        Tmp = ReplaceFunctionName(Tmp, &tmpsize, "shadow2D", "texture");
-        Tmp = ReplaceFunctionName(Tmp, &tmpsize, "shadow2DLod", "textureLod");
         Tmp = ReplaceFunctionName(Tmp, &tmpsize, "texture2D", "texture");
         Tmp = ReplaceFunctionName(Tmp, &tmpsize, "texture3D", "texture");
         Tmp = ReplaceFunctionName(Tmp, &tmpsize, "texture2DLod", "textureLod");
+        // insert shadowany wrapper :
+        // vec4 shadow1D(sampler1DShadow s, vec3 c){float r=texture(s,c);return vec4(r);} vec4 shadow1D(sampler1DShadow
+        // s, vec3 c,float b){float r=texture(s,c,b);return vec4(r);} vec4 shadow2D(sampler2DShadow s, vec3 c){float
+        // r=texture(s,c);return vec4(r);} vec4 shadow2D(sampler2DShadow s, vec3 c,float b){float
+        // r=texture(s,c,b);return vec4(r);} vec4 shadow1DProj(sampler1DShadow s, vec4 c){float
+        // r=textureProj(s,c);return vec4(r);} vec4 shadow1DProj(sampler1DShadow s, vec4 c,float b){float
+        // r=textureProj(s,c,b);return vec4(r);} vec4 shadow2DProj(sampler2DShadow s, vec4 c){float
+        // r=textureProj(s,c);return vec4(r);} vec4 shadow2DProj(sampler2DShadow s, vec4 c,float b){float
+        // r=textureProj(s,c,b);return vec4(r);} vec4 shadow1DLod(sampler1DShadow s, vec3 c,float l){float
+        // r=textureLod(s,c,l);return vec4(r);} vec4 shadow2DLod(sampler2DShadow s, vec3 c,float l){float
+        // r=textureLod(s,c,l);return vec4(r);} vec4 shadow1DProjLod(sampler1DShadow s, vec4 c,float l){float
+        // r=textureProjLod(s,c,l);return vec4(r);} vec4 shadow2DProjLod(sampler2DShadow s, vec4 c,float l){float
+        // r=textureProjLod(s,c,l);return vec4(r);}
+        const char* wrapper =
+            "vec4 shadow1D(sampler1DShadow s, vec3 c){float r=texture(s,c);return vec4(r);}\n "
+            "//vec4 shadow1D(sampler1DShadow s, vec3 c,float b){float r=texture(s,c,b);return vec4(r);}\n "
+            "vec4 shadow2D(sampler2DShadow s, vec3 c){float r=texture(s,c);return vec4(r);}\n "
+            "//vec4 shadow2D(sampler2DShadow s, vec3 c,float b){float r=texture(s,c,b);return vec4(r);}\n "
+            "vec4 shadow1DProj(sampler1DShadow s, vec4 c){float r=textureProj(s,c);return vec4(r);}\n "
+            "//vec4 shadow1DProj(sampler1DShadow s, vec4 c,float b){float r=textureProj(s,c,b);return vec4(r);}\n "
+            "vec4 shadow2DProj(sampler2DShadow s, vec4 c){float r=textureProj(s,c);return vec4(r);}\n "
+            "//vec4 shadow2DProj(sampler2DShadow s, vec4 c,float b){float r=textureProj(s,c,b);return vec4(r);}\n "
+            "//vec4 shadow1DLod(sampler1DShadow s, vec3 c,float l){float r=textureLod(s,c,l);return vec4(r);}\n "
+            "//vec4 shadow2DLod(sampler2DShadow s, vec3 c,float l){float r=textureLod(s,c,l);return vec4(r);}\n "
+            "//vec4 shadow1DProjLod(sampler1DShadow s, vec4 c,float l){float r=textureProjLod(s,c,l);return "
+            "vec4(r);}\n "
+            "//vec4 shadow2DProjLod(sampler2DShadow s, vec4 c,float l){float r=textureProjLod(s,c,l);return "
+            "vec4(r);}\n";
+        Tmp = InplaceInsert(GetLine(Tmp, headline), wrapper, Tmp, &tmpsize);
 
         char* GLESBackport;
         if (doInsertDefinitions) {

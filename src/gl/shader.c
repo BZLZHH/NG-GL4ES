@@ -212,7 +212,7 @@ char* replace_version_line(const char* text) {
     return strdup(text);
 }
 
-char* replace_version_line_460(const char* text) {
+char* replace_version_line_460(char* text) {
     const char* new_version = "#version 460\n";
     if (!text || !new_version) return NULL;
 

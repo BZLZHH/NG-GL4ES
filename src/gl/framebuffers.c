@@ -239,13 +239,10 @@ void APIENTRY_GL4ES gl4es_glBindFramebuffer(GLenum target, GLuint framebuffer) {
                   PrintEnum(target), framebuffer, glstate->list.active ? "active" : "none", glstate->fbo.current_fb->id,
                   glstate->fbo.fbo_draw->id, glstate->fbo.fbo_read->id);)
     if (target == GL_FRAMEBUFFER) {
-        gl4es_glBindFramebuffer(GL_FRAMEBUFFER - 1, framebuffer);
         gl4es_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
         gl4es_glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
         return;
     }
-
-    if (target == GL_FRAMEBUFFER - 1) ++target;
 
     PUSH_IF_COMPILING(glBindFramebuffer);
     LOAD_GLES2_OR_OES(glBindFramebuffer);
