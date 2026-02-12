@@ -465,6 +465,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EX(glPixelStoref);
     STUB(glPrioritizeTextures);
     STUB(glSelectBuffer);   //TODO
+    _EX(glBindImageTexture);
 
     _EX(glMultiDrawArrays);
     _EXT(glMultiDrawArrays);
@@ -1040,6 +1041,8 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     }
 
     // GL 3.0
+
+    _EX(glMemoryBarrier);
 
     //Sampler
     _EX(glGenSamplers);

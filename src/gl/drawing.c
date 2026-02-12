@@ -1104,6 +1104,12 @@ void APIENTRY_GL4ES gl4es_glDrawElementsIndirect(GLenum mode, GLenum type, const
 AliasExport(void, glDrawElementsIndirect, , (GLenum mode, GLenum type, const void* indirect));
 AliasExport(void, glDrawElementsIndirect, ARB, (GLenum mode, GLenum type, const void* indirect));
 
+void APIENTRY_GL4ES gl4es_glMemoryBarrier(GLbitfield barriers) {
+    LOAD_GLES3(glMemoryBarrier);
+    gles_glMemoryBarrier(barriers);
+}
+AliasExport(void, glMemoryBarrier, , (GLbitfield barriers));
+
 void internal_glMultiDrawElementsBaseVertex_gles32(GLenum mode, const GLsizei* counts, GLenum type,
                                                    const void* const* indices, GLsizei primcount,
                                                    const GLint* basevertex) {

@@ -228,6 +228,16 @@ void APIENTRY_GL4ES gl4es_glBindTexture(GLenum target, GLuint texture) {
         }
     }
 }
+
+void APIENTRY_GL4ES gl4es_glBindImageTexture(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer,
+                                             GLenum access, GLenum format) {
+    noerrorShim();
+    DBG(SHUT_LOGD("glBindImageTexture(%u, %u, %d, %d, %d, %s, %s)\n", unit, texture, level, layered, layer,
+                  PrintEnum(access), PrintEnum(format)););
+    LOAD_GLES3(glBindImageTexture);
+    gles_glBindImageTexture(unit, texture, level, layered, layer, access, format);
+}
+
 int is_mipmap_needed(glsampler_t* sampler) {
     switch (sampler->min_filter) {
     case GL_NEAREST_MIPMAP_NEAREST:
@@ -970,6 +980,8 @@ void realize_textures(int drawing) {
 
 // Direct wrapper
 AliasExport(void, glBindTexture, , (GLenum target, GLuint texture));
+AliasExport(void, glBindImageTexture, ,
+            (GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format));
 AliasExport(void, glGenTextures, , (GLsizei n, GLuint* textures));
 AliasExport(void, glDeleteTextures, , (GLsizei n, const GLuint* textures));
 AliasExport(void, glTexParameteri, , (GLenum target, GLenum pname, GLint param));
