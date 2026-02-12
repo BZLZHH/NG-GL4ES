@@ -422,7 +422,11 @@ void APIENTRY_GL4ES gl4es_glDeleteTextures(GLsizei n, const GLuint* textures) {
                         glstate->actual_tex2d[a] = 0;
                         found = 1;
                     }
-                    if (found) glstate->bound_changed = a + 1;
+                    if (found) {
+                        glstate->bound_changed = a + 1;
+                        if (glstate->fpe_state && glstate->fpe_bound_changed < a + 1)
+                            glstate->fpe_bound_changed = a + 1;
+                    }
                 }
                 gles_glDeleteTextures(1, &tex->glname);
                 // check if renderbuffer where associeted

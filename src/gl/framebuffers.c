@@ -28,6 +28,20 @@ KHASH_MAP_IMPL_INT(framebufferlist_t, glframebuffer_t*);
 int npot(int n);
 int wrap_npot(GLenum wrap);
 
+static void fpe_mark_texture_dirty(gltexture_t* tex) {
+    if (!glstate || !glstate->fpe_state || !tex) return;
+    int max = glstate->fpe_bound_changed;
+    for (int unit = 0; unit < MAX_TEX; ++unit) {
+        for (int t = 0; t < ENABLED_TEXTURE_LAST; ++t) {
+            if (glstate->texture.bound[unit][t] == tex) {
+                if (max < unit + 1) max = unit + 1;
+                break;
+            }
+        }
+    }
+    glstate->fpe_bound_changed = max;
+}
+
 glframebuffer_t* find_framebuffer(GLuint framebuffer) {
     // Get a framebuffer based on ID
     if (framebuffer == 0) return glstate->fbo.fbo_0; // NULL or fbo_0 ?
@@ -610,6 +624,7 @@ void APIENTRY_GL4ES gl4es_glFramebufferTexture2D(GLenum target, GLenum attachmen
 
     if ((old_attachment_type == textarget) && (old_attachment == (tex ? tex->texture : texture))) {
         // no need to reattach
+        fpe_mark_texture_dirty(tex);
         noerrorShim();
         return;
     }
@@ -675,6 +690,7 @@ void APIENTRY_GL4ES gl4es_glFramebufferTexture2D(GLenum target, GLenum attachmen
             }
             gl4es_glFramebufferRenderbuffer(ntarget, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, tex ? tex->renderdepth : 0);
         }
+        fpe_mark_texture_dirty(tex);
         errorGL();
         ReadDraw_Pop(target);
         return;
@@ -743,6 +759,7 @@ void APIENTRY_GL4ES gl4es_glFramebufferTexture2D(GLenum target, GLenum attachmen
             gl4es_glFramebufferRenderbuffer(ntarget, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                             tex ? tex->renderstencil : 0);
         }
+        fpe_mark_texture_dirty(tex);
         errorGL();
         ReadDraw_Pop(target);
         return;
@@ -830,10 +847,12 @@ void APIENTRY_GL4ES gl4es_glFramebufferTexture2D(GLenum target, GLenum attachmen
             gl4es_glFramebufferRenderbuffer(ntarget, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                             tex ? tex->renderstencil : 0);
         }
+        fpe_mark_texture_dirty(tex);
         ReadDraw_Pop(target);
         return;
     }
 
+    fpe_mark_texture_dirty(tex);
     errorGL();
     GLenum realtarget = GL_TEXTURE_2D;
     if (textarget >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && textarget < GL_TEXTURE_CUBE_MAP_POSITIVE_X + 6)
