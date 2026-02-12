@@ -154,8 +154,8 @@ gltexture_t* gl4es_getTexture(GLenum target, GLuint texture) {
         DBG(SHUT_LOGD("getTexture(%s, %u), failed, creating texture %u\n", PrintEnum(target), texture, tex->glname);)
         tex->target = target;
         tex->adjustxy[0] = tex->adjustxy[1] = 1.f;
-        tex->mipmap_auto = (globals4es.automipmap == 1);
-        tex->mipmap_need = (globals4es.automipmap == 1) ? 1 : 0;
+        tex->mipmap_auto = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1);
+        tex->mipmap_need = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) ? 1 : 0;
         tex->base_level = -1;
         tex->max_level = -1;
         tex->streamingID = -1;
@@ -238,7 +238,7 @@ int is_mipmap_needed(glsampler_t* sampler) {
 
 GLenum get_texture_min_filter(gltexture_t* texture, glsampler_t* sampler) {
     GLenum ret = sampler->min_filter;
-    if ((globals4es.automipmap == 3) || ((globals4es.automipmap == 1) && (texture->mipmap_auto == 0)) ||
+    if ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 3) || ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) && (texture->mipmap_auto == 0)) ||
         (texture->compressed && (texture->mipmap_auto == 0))) {
         switch (ret) {
         case GL_NEAREST_MIPMAP_NEAREST:
@@ -332,7 +332,7 @@ void APIENTRY_GL4ES gl4es_glTexParameterfv(GLenum target, GLenum pname, const GL
         case GL_TEXTURE_LOD_BIAS:
             return; // not on GLES
         case GL_GENERATE_MIPMAP:
-            if (globals4es.automipmap == 3) return;                // no mipmap, so no need to generate any
+            if (GL4ES_AUTOMIPMAP_PLACEHOLDER == 3) return;         // no mipmap, so no need to generate any
             if (texture->mipmap_auto == ((param) ? 1 : 0)) return; // same value...
             texture->mipmap_auto = (param) ? 1 : 0;
             if (hardext.esversion > 1) {
@@ -459,8 +459,8 @@ void APIENTRY_GL4ES gl4es_glGenTextures(GLsizei n, GLuint* textures) {
             tex->texture = textures[i];
             tex->glname = textures[i];
             tex->adjustxy[0] = tex->adjustxy[1] = 1.f;
-            tex->mipmap_auto = (globals4es.automipmap == 1);
-            tex->mipmap_need = (globals4es.automipmap == 1) ? 1 : 0;
+            tex->mipmap_auto = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1);
+            tex->mipmap_need = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) ? 1 : 0;
             tex->streamingID = -1;
             tex->base_level = -1;
             tex->max_level = -1;
@@ -944,7 +944,8 @@ void realize_textures(int drawing) {
         }
         // check, if drawing, if mipmap needs some special care...
         if (drawing) {
-            if ((globals4es.automipmap == 3) || ((globals4es.automipmap == 1) && (tex->mipmap_auto == 0)) ||
+            if ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 3) ||
+                ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) && (tex->mipmap_auto == 0)) ||
                 (tex->compressed && (tex->mipmap_auto == 0)))
                 tex->mipmap_need = 0;
             else

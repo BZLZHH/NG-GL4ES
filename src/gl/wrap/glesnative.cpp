@@ -44,28 +44,28 @@ NATIVE_FUNCTION_END_NO_RETURN(void, glWaitSync, sync, flags, timeout)
 NATIVE_FUNCTION_HEAD(void, glGetSynciv, GLsync sync, GLenum pname, GLsizei bufSize, GLsizei* length, GLint* values)
 NATIVE_FUNCTION_END_NO_RETURN(void, glGetSynciv, sync, pname, bufSize, length, values)
 
-NATIVE_FUNCTION_HEAD(void, glDrawElementsIndirect, GLenum mode, GLenum type, const void *indirect)
+NATIVE_FUNCTION_HEAD(void, glDrawElementsIndirect, GLenum mode, GLenum type, const void* indirect)
 NATIVE_FUNCTION_END_NO_RETURN(void, glDrawElementsIndirect, mode, type, indirect)
 
-NATIVE_FUNCTION_HEAD(void, glDrawArraysIndirect, GLenum mode, const void *indirect)
+NATIVE_FUNCTION_HEAD(void, glDrawArraysIndirect, GLenum mode, const void* indirect)
 NATIVE_FUNCTION_END_NO_RETURN(void, glDrawArraysIndirect, mode, indirect)
 
-VISIBLE void glBindFragDataLocationIndexed(GLuint program, GLuint colorNumber, GLuint index, const char *name) {
+VISIBLE void glBindFragDataLocationIndexed(GLuint program, GLuint colorNumber, GLuint index, const char* name) {
     LOAD_GLES3(glBindFragDataLocationIndexedEXT);
     gles_glBindFragDataLocationIndexedEXT(program, colorNumber, index, name);
 }
 
-VISIBLE GLint glGetFragDataIndex(GLuint program, const char *name) {
+VISIBLE GLint glGetFragDataIndex(GLuint program, const char* name) {
     LOAD_GLES3(glGetFragDataIndexEXT);
     return gles_glGetFragDataIndexEXT(program, name);
 }
 
-//VISIBLE void glBindFragDataLocation(GLuint program, GLuint colorNumber, const char *name) {
-//    LOAD_GLES3(glBindFragDataLocationEXT);
-//    gles_glBindFragDataLocationEXT(program, colorNumber, name);
-//}
+// VISIBLE void glBindFragDataLocation(GLuint program, GLuint colorNumber, const char *name) {
+//     LOAD_GLES3(glBindFragDataLocationEXT);
+//     gles_glBindFragDataLocationEXT(program, colorNumber, name);
+// }
 
-VISIBLE GLint glGetProgramResourceLocationIndex(GLuint program, GLenum programInterface, const char *name) {
+VISIBLE GLint glGetProgramResourceLocationIndex(GLuint program, GLenum programInterface, const char* name) {
     LOAD_GLES3(glGetProgramResourceLocationIndexEXT);
     return gles_glGetProgramResourceLocationIndexEXT(program, programInterface, name);
 }

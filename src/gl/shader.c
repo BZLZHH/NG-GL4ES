@@ -25,7 +25,8 @@ KHASH_MAP_IMPL_INT(shaderlist, shader_t*);
 GLuint APIENTRY_GL4ES gl4es_glCreateShader(GLenum shaderType) {
     DBG(SHUT_LOGD("glCreateShader(%s)\n", PrintEnum(shaderType)))
     // sanity check
-    if (shaderType != GL_VERTEX_SHADER && shaderType != GL_FRAGMENT_SHADER  && shaderType != GL_GEOMETRY_SHADER) {
+    if (shaderType != GL_VERTEX_SHADER && shaderType != GL_FRAGMENT_SHADER && shaderType != GL_GEOMETRY_SHADER &&
+        shaderType != GL_COMPUTE_SHADER) {
         DBG(SHUT_LOGD("Invalid shader type\n"))
         errorShim(GL_INVALID_ENUM);
         return 0;
@@ -135,8 +136,8 @@ void APIENTRY_GL4ES gl4es_glCompileShader(GLuint shader) {
             GLint status = 0;
             gles_glGetShaderiv(glshader->id, GL_COMPILE_STATUS, &status);
             if (status != GL_TRUE) {
-                DBG(SHUT_LOGD("LIBGL: Error while compiling shader %d. Original source is:\n%s\n=======\n", glshader->id,
-                          glshader->source);)
+                DBG(SHUT_LOGD("LIBGL: Error while compiling shader %d. Original source is:\n%s\n=======\n",
+                              glshader->id, glshader->source);)
                 DBG(SHUT_LOGD("ShaderConv Source is:\n%s\n=======\n", glshader->converted);)
                 char tmp[500];
                 GLint length;
@@ -854,10 +855,10 @@ void APIENTRY_GL4ES gl4es_glGetShaderInfoLog(GLuint shader, GLsizei maxLength, G
     DBG(SHUT_LOGD("glGetShaderInfoLog(%d, %d, %p, %p)\n", shader, maxLength, length, infoLog))
     // find shader
     CHECK_SHADER(void, shader)
-    //if (maxLength <= 0) {
-    //    errorShim(GL_INVALID_OPERATION);
-    //    return;
-    //}
+    // if (maxLength <= 0) {
+    //     errorShim(GL_INVALID_OPERATION);
+    //     return;
+    // }
     LOAD_GLES2(glGetShaderInfoLog);
     if (gles_glGetShaderInfoLog) {
         gles_glGetShaderInfoLog(glshader->id, maxLength, length, infoLog);

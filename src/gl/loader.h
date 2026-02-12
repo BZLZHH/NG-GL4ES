@@ -146,7 +146,9 @@ extern "C"
 
 #define PUSH_IF_COMPILING(name) PUSH_IF_COMPILING_EXT(name, name##_ARG_NAMES)
 
-#define DEFINE_RAW(lib, name) static name##_PTR lib##_##name = NULL
+#define DEFINE_RAW(lib, name)                                                                                          \
+    SHUT_LOGD("Defining raw function %s", #name);                                                                      \
+    static name##_PTR lib##_##name = NULL
 #define LOAD_RAW(lib, name, ...)                                                                                       \
     {                                                                                                                  \
         static bool first = true;                                                                                      \

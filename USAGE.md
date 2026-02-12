@@ -55,15 +55,6 @@ Recycling FBO special case (don't delete a created FBO, but recycle it if needed
  * 0 : Default, nothing special
  * 1 : Recycling of FBO enabled
 
-##### LIBGL_MIPMAP
-Handling of Manual and Automatic MIPMAP
- * 0 : Default, nothing special
- * 1 : AutoMipMap forced
- * 2 : guess AutoMipMap (based on manual mipmaping on textures)
- * 3 : ignore MipMap (mipmap creation / use entirely disabled)
- * 4 : ignore AutoMipMap on non-squared textures
- * 5 : calculate all sub-mipmap one time when uploading level 1
-
 ##### LIBGL_FORCENPOT
 Forcing NPOT (Non-Power of Two) Texture size.
  * 0 : Default, nothing special

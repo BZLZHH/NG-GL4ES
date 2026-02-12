@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(ng_gl4es)
 
-if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+#if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(CheckIPOSupported)
     check_ipo_supported(RESULT LTOSupported OUTPUT LTOError)
     if (LTOSupported)
@@ -15,7 +15,7 @@ if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_compile_options(/O2 /GL)
     endif()
-endif()
+#endif()
 
 # glslang & SPIRV-Cross
 

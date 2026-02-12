@@ -910,7 +910,7 @@ extern "C"
             *params = globals4es.recyclefbo;
             break;
         case GL_MIPMAP_HINT_GL4ES:
-            *params = globals4es.automipmap;
+            *params = GL4ES_AUTOMIPMAP_PLACEHOLDER;
             break;
         case GL_TEXDUMP_HINT_GL4ES:
             *params = globals4es.texdump;
