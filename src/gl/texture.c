@@ -2003,7 +2003,8 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
                     nww <<= 1;
                     nhh <<= 1;
                     --leveln;
-                    gles_glTexImage2D(rtarget, leveln, format, nww, nhh, border, format, type, (pot) ? ndata : NULL);
+                    gles_glTexImage2D(rtarget, leveln, internalformat, nww, nhh, border, format, type,
+                                      (pot) ? ndata : NULL);
                     if (!pot && pixels) gles_glTexSubImage2D(rtarget, leveln, 0, 0, nw, nh, format, type, ndata);
                 }
                 if (ndata != pixels) free(ndata);
@@ -2029,7 +2030,8 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
                     nww = nlevel(nww, 1);
                     nhh = nlevel(nhh, 1);
                     ++leveln;
-                    gles_glTexImage2D(rtarget, leveln, format, nw, nh, border, format, type, (pot) ? ndata : NULL);
+                    gles_glTexImage2D(rtarget, leveln, internalformat, nw, nh, border, format, type,
+                                      (pot) ? ndata : NULL);
                     if (!pot && pixels) gles_glTexSubImage2D(rtarget, leveln, 0, 0, nww, nhh, format, type, ndata);
                 }
                 if (ndata != pixels) free(ndata);
