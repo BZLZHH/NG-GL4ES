@@ -44,9 +44,6 @@ NATIVE_FUNCTION_END_NO_RETURN(void, glWaitSync, sync, flags, timeout)
 NATIVE_FUNCTION_HEAD(void, glGetSynciv, GLsync sync, GLenum pname, GLsizei bufSize, GLsizei* length, GLint* values)
 NATIVE_FUNCTION_END_NO_RETURN(void, glGetSynciv, sync, pname, bufSize, length, values)
 
-NATIVE_FUNCTION_HEAD(void, glDrawElementsIndirect, GLenum mode, GLenum type, const void* indirect)
-NATIVE_FUNCTION_END_NO_RETURN(void, glDrawElementsIndirect, mode, type, indirect)
-
 NATIVE_FUNCTION_HEAD(void, glDrawArraysIndirect, GLenum mode, const void* indirect)
 NATIVE_FUNCTION_END_NO_RETURN(void, glDrawArraysIndirect, mode, indirect)
 

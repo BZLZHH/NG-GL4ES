@@ -177,6 +177,7 @@ extern "C"
                    "GL_ARB_sampler_objects "
                    "GL_ARB_texture_swizzle "
                    "GL_ARB_compatibility "
+                   "GL_ARB_draw_buffers_blend "
                    //"GL_ARB_separate_shader_objects "
                    //                "GL_EXT_blend_logic_op "
             );

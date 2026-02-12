@@ -139,6 +139,8 @@ enum FORMAT {
     FORMAT_void_GLuint_GLfloat_GLfloat_GLfloat,
     FORMAT_void_GLuint_GLfloat_GLfloat_GLfloat_GLfloat,
     FORMAT_void_GLuint_GLint_GLenum_GLboolean_GLsizei_const_GLvoid___GENPT__,
+    FORMAT_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__,
+    FORMAT_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__,
 };
 
 typedef void (APIENTRY*FUNC_void_GLenum)(GLenum texture);
@@ -1702,6 +1704,28 @@ typedef struct {
     int func;
     ARGS_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__ args;
 } INDEXED_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__;
+typedef void (APIENTRY*FUNC_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid * data);
+typedef struct {
+    GLenum a1;
+    GLint a2;
+    GLint a3;
+    GLsizei a4;
+    GLsizei a5;
+    GLsizei a6;
+    GLint a7;
+    GLenum a8;
+    GLenum a9;
+    GLvoid * a10;
+} ARGS_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__;
+typedef struct {
+    int format;
+    FUNC_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__ func;
+    ARGS_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__ args;
+} PACKED_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__;
+typedef struct {
+    int func;
+    ARGS_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__ args;
+} INDEXED_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__;
 typedef void (APIENTRY*FUNC_void_GLenum_GLint_GLint_GLint_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * data);
 typedef struct {
     GLenum a1;
@@ -1723,6 +1747,29 @@ typedef struct {
     int func;
     ARGS_void_GLenum_GLint_GLint_GLint_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__ args;
 } INDEXED_void_GLenum_GLint_GLint_GLint_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__;
+typedef void (APIENTRY*FUNC_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * data);
+typedef struct {
+    GLenum a1;
+    GLint a2;
+    GLint a3;
+    GLint a4;
+    GLint a5;
+    GLsizei a6;
+    GLsizei a7;
+    GLsizei a8;
+    GLenum a9;
+    GLenum a10;
+    GLvoid * a11;
+} ARGS_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__;
+typedef struct {
+    int format;
+    FUNC_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__ func;
+    ARGS_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__ args;
+} PACKED_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__;
+typedef struct {
+    int func;
+    ARGS_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__ args;
+} INDEXED_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__;
 typedef void (APIENTRY*FUNC_void_GLint_GLfloat)(GLint location, GLfloat v0);
 typedef struct {
     GLint a1;
@@ -3682,6 +3729,22 @@ packed_call_t* APIENTRY_GL4ES glCopyPackedCall(const packed_call_t *packed);
 #define glVertexAttribIPointer_INDEXED INDEXED_void_GLuint_GLint_GLenum_GLsizei_const_GLvoid___GENPT__
 #define glVertexAttribIPointer_FORMAT FORMAT_void_GLuint_GLint_GLenum_GLsizei_const_GLvoid___GENPT__
 
+#define glTexImage3D_INDEX 243
+#define glTexImage3D_RETURN void
+#define glTexImage3D_ARG_NAMES target, level, internalformat, width, height, depth, border, format, type, data
+#define glTexImage3D_ARG_EXPAND GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid * data
+#define glTexImage3D_PACKED PACKED_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__
+#define glTexImage3D_INDEXED INDEXED_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__
+#define glTexImage3D_FORMAT FORMAT_void_GLenum_GLint_GLint_GLsizei_GLsizei_GLsizei_GLint_GLenum_GLenum_const_GLvoid___GENPT__
+
+#define glTexSubImage3D_INDEX 244
+#define glTexSubImage3D_RETURN void
+#define glTexSubImage3D_ARG_NAMES target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data
+#define glTexSubImage3D_ARG_EXPAND GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * data
+#define glTexSubImage3D_PACKED PACKED_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__
+#define glTexSubImage3D_INDEXED INDEXED_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__
+#define glTexSubImage3D_FORMAT FORMAT_void_GLenum_GLint_GLint_GLint_GLint_GLsizei_GLsizei_GLsizei_GLenum_GLenum_const_GLvoid___GENPT__
+
 void APIENTRY_GL4ES gl4es_glActiveTexture(glActiveTexture_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glActiveTexture_PTR)(glActiveTexture_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glAlphaFunc(glAlphaFunc_ARG_EXPAND);
@@ -4094,6 +4157,8 @@ void APIENTRY_GL4ES gl4es_glTexGeni(glTexGeni_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glTexGeni_PTR)(glTexGeni_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glTexImage2D(glTexImage2D_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glTexImage2D_PTR)(glTexImage2D_ARG_EXPAND);
+void APIENTRY_GL4ES gl4es_glTexImage3D(glTexImage3D_ARG_EXPAND);
+typedef void (APIENTRY_GLES * glTexImage3D_PTR)(glTexImage3D_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glGetTexLevelParameteriv(glGetTexLevelParameteriv_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glGetTexLevelParameteriv_PTR)(glGetTexLevelParameteriv_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glTexParameterf(glTexParameterf_ARG_EXPAND);
@@ -4110,6 +4175,8 @@ void APIENTRY_GL4ES gl4es_glTexParameterxv(glTexParameterxv_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glTexParameterxv_PTR)(glTexParameterxv_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glTexSubImage2D(glTexSubImage2D_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glTexSubImage2D_PTR)(glTexSubImage2D_ARG_EXPAND);
+void APIENTRY_GL4ES gl4es_glTexSubImage3D(glTexSubImage3D_ARG_EXPAND);
+typedef void (APIENTRY_GLES * glTexSubImage3D_PTR)(glTexSubImage3D_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glTranslatef(glTranslatef_ARG_EXPAND);
 typedef void (APIENTRY_GLES * glTranslatef_PTR)(glTranslatef_ARG_EXPAND);
 void APIENTRY_GL4ES gl4es_glTranslatex(glTranslatex_ARG_EXPAND);
@@ -6441,6 +6508,24 @@ typedef GLint (*glGetProgramResourceLocationIndexEXT_PTR)(glGetProgramResourceLo
     glPushCall((void *)packed_data); \
 }
 #endif
+#ifndef direct_glTexImage3D
+#define push_glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, data) { \
+    glTexImage3D_PACKED *packed_data = malloc(sizeof(glTexImage3D_PACKED)); \
+    packed_data->format = glTexImage3D_FORMAT; \
+    packed_data->func = gl4es_glTexImage3D; \
+    packed_data->args.a1 = (GLenum)target; \
+    packed_data->args.a2 = (GLint)level; \
+    packed_data->args.a3 = (GLint)internalformat; \
+    packed_data->args.a4 = (GLsizei)width; \
+    packed_data->args.a5 = (GLsizei)height; \
+    packed_data->args.a6 = (GLsizei)depth; \
+    packed_data->args.a7 = (GLint)border; \
+    packed_data->args.a8 = (GLenum)format; \
+    packed_data->args.a9 = (GLenum)type; \
+    packed_data->args.a10 = (GLvoid *)data; \
+    glPushCall((void *)packed_data); \
+}
+#endif
 #ifndef direct_glTexParameterf
 #define push_glTexParameterf(target, pname, param) { \
     glTexParameterf_PACKED *packed_data = malloc(sizeof(glTexParameterf_PACKED)); \
@@ -6521,6 +6606,25 @@ typedef GLint (*glGetProgramResourceLocationIndexEXT_PTR)(glGetProgramResourceLo
     packed_data->args.a7 = (GLenum)format; \
     packed_data->args.a8 = (GLenum)type; \
     packed_data->args.a9 = (GLvoid *)data; \
+    glPushCall((void *)packed_data); \
+}
+#endif
+#ifndef direct_glTexSubImage3D
+#define push_glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data) { \
+    glTexSubImage3D_PACKED *packed_data = malloc(sizeof(glTexSubImage3D_PACKED)); \
+    packed_data->format = glTexSubImage3D_FORMAT; \
+    packed_data->func = gl4es_glTexSubImage3D; \
+    packed_data->args.a1 = (GLenum)target; \
+    packed_data->args.a2 = (GLint)level; \
+    packed_data->args.a3 = (GLint)xoffset; \
+    packed_data->args.a4 = (GLint)yoffset; \
+    packed_data->args.a5 = (GLint)zoffset; \
+    packed_data->args.a6 = (GLsizei)width; \
+    packed_data->args.a7 = (GLsizei)height; \
+    packed_data->args.a8 = (GLsizei)depth; \
+    packed_data->args.a9 = (GLenum)format; \
+    packed_data->args.a10 = (GLenum)type; \
+    packed_data->args.a11 = (GLvoid *)data; \
     glPushCall((void *)packed_data); \
 }
 #endif

@@ -727,6 +727,11 @@ static void fill_program(program_t* glprogram) {
                         glprogram->texunits[tu_idx].type = TU_TEX2DSH;
                         glprogram->texunits[tu_idx].req_tu = glprogram->texunits[tu_idx].act_tu = 0;
                         ++tu_idx;
+                    } else if (type == GL_SAMPLER_3D) {
+                        glprogram->texunits[tu_idx].id = id;
+                        glprogram->texunits[tu_idx].type = TU_TEX3D;
+                        glprogram->texunits[tu_idx].req_tu = glprogram->texunits[tu_idx].act_tu = 0;
+                        ++tu_idx;
                     }
                     DBG(SHUT_LOGD(" uniform #%d : \"%s\"%s type=%s size=%d\n", id, gluniform->name,
                                   gluniform->builtin ? " (builtin) " : "", PrintEnum(gluniform->type), gluniform->size))
@@ -750,7 +755,8 @@ static void fill_program(program_t* glprogram) {
         uniform_t* m;
         khint_t k;
         kh_foreach(glprogram->uniform, k, m,
-                   if (m->type == GL_SAMPLER_2D || m->type == GL_SAMPLER_CUBE || m->type == GL_SAMPLER_2D_SHADOW)
+                   if (m->type == GL_SAMPLER_2D || m->type == GL_SAMPLER_CUBE || m->type == GL_SAMPLER_2D_SHADOW ||
+                       m->type == GL_SAMPLER_3D)
                        memset((char*)glprogram->cache.cache + m->cache_offs, 0xff, m->cache_size);)
     }
 

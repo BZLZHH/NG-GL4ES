@@ -147,7 +147,7 @@ extern "C"
 #define PUSH_IF_COMPILING(name) PUSH_IF_COMPILING_EXT(name, name##_ARG_NAMES)
 
 #define DEFINE_RAW(lib, name)                                                                                          \
-    SHUT_LOGD("Defining raw function %s", #name);                                                                      \
+    DBG(SHUT_LOGD("Defining raw function %s", #name);)                                                                 \
     static name##_PTR lib##_##name = NULL
 #define LOAD_RAW(lib, name, ...)                                                                                       \
     {                                                                                                                  \
@@ -263,9 +263,16 @@ extern "C"
 #define LOAD_GLES3_OR_EXT(name)                                                                                        \
     DEFINE_RAW(gles, name);                                                                                            \
     {                                                                                                                  \
-        LOAD_EGL(eglGetProcAddress);                                                                                   \
-        name##_PTR origin = (name##_PTR)egl_eglGetProcAddress(#name);                                                  \
-        LOAD_RAW(gles, name, ((origin ? origin : egl_eglGetProcAddress(#name "EXT"))));                                \
+        static bool first = true;                                                                                      \
+        if (first) {                                                                                                   \
+            first = false;                                                                                             \
+            LOAD_EGL(eglGetProcAddress);                                                                               \
+            if (gles != NULL) {                                                                                        \
+                name##_PTR origin = (name##_PTR)egl_eglGetProcAddress(#name);                                          \
+                gles_##name = (name##_PTR)(origin ? origin : egl_eglGetProcAddress(#name "EXT"));                      \
+            }                                                                                                          \
+            WARN_NULL(gles_##name);                                                                                    \
+        }                                                                                                              \
     }
 
 #define LOAD_GLES2_OR_OES(name)                                                                                        \

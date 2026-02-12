@@ -1085,6 +1085,25 @@ AliasExport(void, glDrawElementsBaseVertex, ,
 AliasExport(void, glDrawElementsBaseVertex, ARB,
             (GLenum mode, GLsizei count, GLenum type, const void* indices, GLint basevertex));
 
+void APIENTRY_GL4ES gl4es_glDrawElementsIndirect(GLenum mode, GLenum type, const void* indirect) {
+    DBG(SHUT_LOGD("glDrawElementsIndirect(%s, %s, %p), vtx=%p map=%p, pending=%d\n", PrintEnum(mode), PrintEnum(type),
+                  indirect, (glstate->vao->vertex) ? glstate->vao->vertex->data : NULL,
+                  (glstate->vao->elements) ? glstate->vao->elements->data : NULL, glstate->list.pending);)
+    scratch_t scratch = {0};
+
+    realize_glenv(mode == GL_POINTS, 0, 0, type, indirect, &scratch);
+    free_scratch(&scratch);
+
+    realize_textures(1);
+    bindBuffer(GL_ARRAY_BUFFER, glstate->vao->vertex->real_buffer);
+    bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
+
+    LOAD_GLES3_OR_EXT(glDrawElementsIndirect);
+    gles_glDrawElementsIndirect(mode, type, indirect);
+}
+AliasExport(void, glDrawElementsIndirect, , (GLenum mode, GLenum type, const void* indirect));
+AliasExport(void, glDrawElementsIndirect, ARB, (GLenum mode, GLenum type, const void* indirect));
+
 void internal_glMultiDrawElementsBaseVertex_gles32(GLenum mode, const GLsizei* counts, GLenum type,
                                                    const void* const* indices, GLsizei primcount,
                                                    const GLint* basevertex) {

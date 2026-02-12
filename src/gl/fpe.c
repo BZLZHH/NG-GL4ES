@@ -606,6 +606,7 @@ void APIENTRY_GL4ES fpe_SyncUniforms(uniformcache_t* cache, program_t* glprogram
                             (GLfloat*)((uintptr_t)cache->cache + m->parent_offs));
                 break;
             case GL_SAMPLER_2D:
+            case GL_SAMPLER_3D:
             case GL_SAMPLER_CUBE:
             case GL_SAMPLER_2D_SHADOW:
             case GL_INT:
