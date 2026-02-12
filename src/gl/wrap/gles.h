@@ -3828,6 +3828,10 @@ extern "C"
     GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex
 #define glDispatchCompute_ARG_EXPAND GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z
 #define glReadBuffer_ARG_EXPAND GLenum src
+#define glClearBufferiv_ARG_EXPAND GLenum buffer, GLint drawbuffer, const GLint *value
+#define glClearBufferuiv_ARG_EXPAND GLenum buffer, GLint drawbuffer, const GLuint *value
+#define glClearBufferfv_ARG_EXPAND GLenum buffer, GLint drawbuffer, const GLfloat *value
+#define glClearBufferfi_ARG_EXPAND GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil
 #define glMemoryBarrier_ARG_EXPAND GLbitfield barriers
 #define glDispatchComputeIndirect_ARG_EXPAND GLintptr indirect
 #define glCopyBufferSubData_ARG_EXPAND                                                                                 \
@@ -4382,6 +4386,14 @@ extern "C"
     typedef void (*glDrawElementsBaseVertex_PTR)(glDrawElementsBaseVertex_ARG_EXPAND);
     void gl4es_glReadBuffer(glReadBuffer_ARG_EXPAND);
     typedef void (*glReadBuffer_PTR)(glReadBuffer_ARG_EXPAND);
+    void gl4es_glClearBufferiv(glClearBufferiv_ARG_EXPAND);
+    typedef void (*glClearBufferiv_PTR)(glClearBufferiv_ARG_EXPAND);
+    void gl4es_glClearBufferuiv(glClearBufferuiv_ARG_EXPAND);
+    typedef void (*glClearBufferuiv_PTR)(glClearBufferuiv_ARG_EXPAND);
+    void gl4es_glClearBufferfv(glClearBufferfv_ARG_EXPAND);
+    typedef void (*glClearBufferfv_PTR)(glClearBufferfv_ARG_EXPAND);
+    void gl4es_glClearBufferfi(glClearBufferfi_ARG_EXPAND);
+    typedef void (*glClearBufferfi_PTR)(glClearBufferfi_ARG_EXPAND);
     void gl4es_glDispatchCompute(glDispatchCompute_ARG_EXPAND);
     typedef void (*glDispatchCompute_PTR)(glDispatchCompute_ARG_EXPAND);
     void gl4es_glMemoryBarrier(glMemoryBarrier_ARG_EXPAND);

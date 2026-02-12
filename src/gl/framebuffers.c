@@ -1664,6 +1664,11 @@ void APIENTRY_GL4ES gl4es_glNamedFramebufferDrawBuffers(GLuint framebuffer, GLsi
 
 void APIENTRY_GL4ES gl4es_glClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint* value) {
     noerrorShim();
+    if (hardext.esversion >= 3) {
+        LOAD_GLES3(glClearBufferiv);
+        gles_glClearBufferiv(buffer, drawbuffer, value);
+        return;
+    }
     GLenum attch;
     switch (buffer) {
     case GL_COLOR:
@@ -1717,6 +1722,11 @@ void APIENTRY_GL4ES gl4es_glClearBufferiv(GLenum buffer, GLint drawbuffer, const
 }
 void APIENTRY_GL4ES gl4es_glClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint* value) {
     noerrorShim();
+    if (hardext.esversion >= 3) {
+        LOAD_GLES3(glClearBufferuiv);
+        gles_glClearBufferuiv(buffer, drawbuffer, value);
+        return;
+    }
     GLenum attch;
     switch (buffer) {
     case GL_COLOR:
@@ -1758,6 +1768,11 @@ void APIENTRY_GL4ES gl4es_glClearBufferuiv(GLenum buffer, GLint drawbuffer, cons
 }
 void APIENTRY_GL4ES gl4es_glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat* value) {
     noerrorShim();
+    if (hardext.esversion >= 3) {
+        LOAD_GLES3(glClearBufferfv);
+        gles_glClearBufferfv(buffer, drawbuffer, value);
+        return;
+    }
     GLenum attch;
     switch (buffer) {
     case GL_COLOR:
@@ -1810,6 +1825,11 @@ void APIENTRY_GL4ES gl4es_glClearBufferfv(GLenum buffer, GLint drawbuffer, const
     return;
 }
 void APIENTRY_GL4ES gl4es_glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) {
+    if (hardext.esversion >= 3) {
+        LOAD_GLES3(glClearBufferfi);
+        gles_glClearBufferfi(buffer, drawbuffer, depth, stencil);
+        return;
+    }
     if (buffer != GL_DEPTH_STENCIL || drawbuffer != 0) {
         errorShim(GL_INVALID_ENUM);
         return;
