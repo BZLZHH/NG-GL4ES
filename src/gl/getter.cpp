@@ -1038,6 +1038,13 @@ extern "C"
         case GL_CONTEXT_PROFILE_MASK:
             *params = GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
             break;
+        case GL_MAX_TEXTURE_IMAGE_UNITS:
+            static GLint esMaxTextureUnits = 0;
+            if (!esMaxTextureUnits) {
+                gles_glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &esMaxTextureUnits);
+            }
+            *params = esMaxTextureUnits * 2; // Cheating a bit
+            break;
         default:
             errorGL();
             gles_glGetIntegerv(pname, params);
