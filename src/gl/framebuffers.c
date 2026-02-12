@@ -1594,15 +1594,68 @@ void gl4es_setCurrentFBO() {
                            (glstate->fbo.current_fb->id) ? glstate->fbo.current_fb->id : glstate->fbo.mainfbo_fbo);
 }
 
+static inline GLboolean is_default_fbo(const glframebuffer_t* fb) {
+    return (!fb || fb->id == 0);
+}
+
+static inline GLenum remap_tex_target(GLenum textarget) {
+    if (textarget >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && textarget < GL_TEXTURE_CUBE_MAP_POSITIVE_X + 6) return textarget;
+    return GL_TEXTURE_2D;
+}
+
+static void remap_drawbuffers_for_fbo(glframebuffer_t* fb, GLsizei n, const GLenum* bufs, GLenum* out_bufs,
+                                      GLboolean rebind) {
+    if (!bufs || !out_bufs || n <= 0) return;
+    if (is_default_fbo(fb)) {
+        memcpy(out_bufs, bufs, n * sizeof(GLenum));
+        return;
+    }
+    LOAD_GLES2_OR_OES(glFramebufferTexture2D);
+    LOAD_GLES2_OR_OES(glFramebufferRenderbuffer);
+
+    GLenum attach_target = (hardext.esversion >= 3) ? GL_DRAW_FRAMEBUFFER : GL_FRAMEBUFFER;
+    for (int i = 0; i < n; ++i) {
+        GLenum buf = bufs[i];
+        if (buf == GL_NONE) {
+            out_bufs[i] = GL_NONE;
+            continue;
+        }
+        if (buf >= GL_COLOR_ATTACHMENT0 && buf < (GL_COLOR_ATTACHMENT0 + hardext.maxcolorattach)) {
+            int idx = buf - GL_COLOR_ATTACHMENT0;
+            if (idx >= 0 && idx < MAX_DRAW_BUFFERS) {
+                if (rebind) {
+                    GLenum atttarget = fb->t_color[idx];
+                    GLuint att = fb->color[idx];
+                    int level = fb->l_color[idx];
+                    if (atttarget == GL_RENDERBUFFER) {
+                        gles_glFramebufferRenderbuffer(attach_target, GL_COLOR_ATTACHMENT0 + i, GL_RENDERBUFFER, att);
+                    } else {
+                        GLuint glname = 0;
+                        GLenum realtarget = GL_TEXTURE_2D;
+                        if (atttarget) {
+                            realtarget = remap_tex_target(atttarget);
+                            if (att) {
+                                gltexture_t* tex = gl4es_getTexture(atttarget, att);
+                                if (tex) glname = tex->glname;
+                            }
+                        }
+                        gles_glFramebufferTexture2D(attach_target, GL_COLOR_ATTACHMENT0 + i, realtarget, glname, level);
+                    }
+                }
+                out_bufs[i] = GL_COLOR_ATTACHMENT0 + i;
+                continue;
+            }
+        }
+        out_bufs[i] = buf;
+    }
+}
+
 void APIENTRY_GL4ES gl4es_glDrawBuffer(GLenum buffer) {
     DBG(SHUT_LOGD("glDrawBuffer, %s", PrintEnum(buffer));)
-    LOAD_GLES(glGetIntegerv)
     LOAD_GLES3(glDrawBuffers)
 
-    GLint currentFBO;
-    gles_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFBO);
-
-    if (currentFBO == 0) {
+    glframebuffer_t* fb = glstate->fbo.fbo_draw;
+    if (is_default_fbo(fb)) {
         GLenum buffers[1] = {GL_NONE};
         switch (buffer) {
         case GL_FRONT:
@@ -1617,26 +1670,9 @@ void APIENTRY_GL4ES gl4es_glDrawBuffer(GLenum buffer) {
         glstate->fbo.fbo_draw->n_draw = 1;
         glstate->fbo.fbo_draw->drawbuff[0] = buffers[0];
     } else {
-        GLint maxAttachments;
-        gles_glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttachments);
-        if (maxAttachments > MAX_DRAW_BUFFERS) maxAttachments = MAX_DRAW_BUFFERS;
-
-        if (buffer == GL_NONE) {
-            GLenum* buffers = (GLenum*)alloca(maxAttachments * sizeof(GLenum));
-            for (int i = 0; i < maxAttachments; i++) {
-                buffers[i] = GL_NONE;
-            }
-            gles_glDrawBuffers(maxAttachments, buffers);
-            glstate->fbo.fbo_draw->n_draw = maxAttachments;
-            memcpy(glstate->fbo.fbo_draw->drawbuff, buffers, maxAttachments * sizeof(GLenum));
-        } else if (buffer >= GL_COLOR_ATTACHMENT0 && buffer < GL_COLOR_ATTACHMENT0 + maxAttachments) {
-            GLenum* buffers = (GLenum*)alloca(maxAttachments * sizeof(GLenum));
-            for (int i = 0; i < maxAttachments; i++) {
-                buffers[i] = (i == (buffer - GL_COLOR_ATTACHMENT0)) ? buffer : GL_NONE;
-            }
-            gles_glDrawBuffers(maxAttachments, buffers);
-            glstate->fbo.fbo_draw->n_draw = maxAttachments;
-            memcpy(glstate->fbo.fbo_draw->drawbuff, buffers, maxAttachments * sizeof(GLenum));
+        if (buffer == GL_NONE ||
+            (buffer >= GL_COLOR_ATTACHMENT0 && buffer < GL_COLOR_ATTACHMENT0 + hardext.maxcolorattach)) {
+            gl4es_glDrawBuffers(1, &buffer);
         }
     }
 }
@@ -1646,7 +1682,14 @@ void APIENTRY_GL4ES gl4es_glDrawBuffers(GLsizei n, const GLenum* bufs) {
     DBG(SHUT_LOGD("glDrawBuffers(%d, %p) [0]=%s\n", n, bufs, n ? PrintEnum(bufs[0]) : "nil");)
     if (hardext.drawbuffers) {
         LOAD_GLES3_OR_EXT(glDrawBuffers);
-        gles_glDrawBuffers(n, bufs);
+        glframebuffer_t* fb = glstate->fbo.fbo_draw;
+        if (!is_default_fbo(fb) && n > 0 && bufs) {
+            GLenum* new_bufs = (GLenum*)alloca(n * sizeof(GLenum));
+            remap_drawbuffers_for_fbo(fb, n, bufs, new_bufs, GL_TRUE);
+            gles_glDrawBuffers(n, new_bufs);
+        } else {
+            gles_glDrawBuffers(n, bufs);
+        }
         errorGL();
     } else {
         if (n < 0 || n > hardext.maxdrawbuffers) {
@@ -1672,7 +1715,13 @@ void APIENTRY_GL4ES gl4es_glNamedFramebufferDrawBuffers(GLuint framebuffer, GLsi
         GLuint oldf = glstate->fbo.fbo_draw->id;
         gl4es_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb->id);
         LOAD_GLES_EXT(glDrawBuffers);
-        gles_glDrawBuffers(n, bufs);
+        if (!is_default_fbo(fb) && n > 0 && bufs) {
+            GLenum* new_bufs = (GLenum*)alloca(n * sizeof(GLenum));
+            remap_drawbuffers_for_fbo(fb, n, bufs, new_bufs, GL_TRUE);
+            gles_glDrawBuffers(n, new_bufs);
+        } else {
+            gles_glDrawBuffers(n, bufs);
+        }
         errorGL();
         gl4es_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, oldf);
     }
@@ -1698,7 +1747,7 @@ void APIENTRY_GL4ES gl4es_glClearBufferiv(GLenum buffer, GLint drawbuffer, const
         if (drawbuffer >= glstate->fbo.fbo_draw->n_draw) return; // GL_NONE...
         attch = glstate->fbo.fbo_draw->drawbuff[drawbuffer];
         if (attch == GL_NONE) return;
-        if (glstate->fbo.fbo_draw->id == 0) {
+        if (is_default_fbo(glstate->fbo.fbo_draw)) {
             if (!(attch == GL_FRONT || attch == GL_BACK)) {
                 errorShim(GL_INVALID_VALUE);
                 return;
@@ -1711,14 +1760,21 @@ void APIENTRY_GL4ES gl4es_glClearBufferiv(GLenum buffer, GLint drawbuffer, const
             GLfloat oldclear[4];
             LOAD_GLES_EXT(glDrawBuffers);
             // select the buffer...
-            if (hardext.drawbuffers) gles_glDrawBuffers(1, &attch);
+            GLenum phys_attch = attch;
+            if (!is_default_fbo(glstate->fbo.fbo_draw)) phys_attch = GL_COLOR_ATTACHMENT0 + drawbuffer;
+            if (hardext.drawbuffers) gles_glDrawBuffers(1, &phys_attch);
             gl4es_glGetFloatv(GL_COLOR_CLEAR_VALUE, oldclear);
             // how to convert the value? Most FB will be 8bits / component for now...
             gl4es_glClearColor(value[0] / 127.0f, value[1] / 127.0f, value[2] / 127.0f, value[3] / 127.0f);
             gl4es_glClear(GL_COLOR_BUFFER_BIT);
             gl4es_glClearColor(oldclear[0], oldclear[1], oldclear[2], oldclear[3]);
             // put back the draw buffers...
-            if (hardext.drawbuffers) gles_glDrawBuffers(glstate->fbo.fbo_draw->n_draw, glstate->fbo.fbo_draw->drawbuff);
+            if (hardext.drawbuffers) {
+                GLenum* restore = (GLenum*)alloca(glstate->fbo.fbo_draw->n_draw * sizeof(GLenum));
+                remap_drawbuffers_for_fbo(glstate->fbo.fbo_draw, glstate->fbo.fbo_draw->n_draw,
+                                          glstate->fbo.fbo_draw->drawbuff, restore, GL_FALSE);
+                gles_glDrawBuffers(glstate->fbo.fbo_draw->n_draw, restore);
+            }
             return;
         }
         break;
@@ -1756,7 +1812,7 @@ void APIENTRY_GL4ES gl4es_glClearBufferuiv(GLenum buffer, GLint drawbuffer, cons
         if (drawbuffer >= glstate->fbo.fbo_draw->n_draw) return; // GL_NONE...
         attch = glstate->fbo.fbo_draw->drawbuff[drawbuffer];
         if (attch == GL_NONE) return;
-        if (glstate->fbo.fbo_draw->id == 0) {
+        if (is_default_fbo(glstate->fbo.fbo_draw)) {
             if (!(attch == GL_FRONT || attch == GL_BACK)) {
                 errorShim(GL_INVALID_VALUE);
                 return;
@@ -1769,14 +1825,21 @@ void APIENTRY_GL4ES gl4es_glClearBufferuiv(GLenum buffer, GLint drawbuffer, cons
             GLfloat oldclear[4];
             LOAD_GLES_EXT(glDrawBuffers);
             // select the buffer...
-            if (hardext.drawbuffers) gles_glDrawBuffers(1, &attch);
+            GLenum phys_attch = attch;
+            if (!is_default_fbo(glstate->fbo.fbo_draw)) phys_attch = GL_COLOR_ATTACHMENT0 + drawbuffer;
+            if (hardext.drawbuffers) gles_glDrawBuffers(1, &phys_attch);
             gl4es_glGetFloatv(GL_COLOR_CLEAR_VALUE, oldclear);
             // how to convert the value? Most FB will be 8bits / component for now...
             gl4es_glClearColor(value[0] / 255.0f, value[1] / 255.0f, value[2] / 255.0f, value[3] / 255.0f);
             gl4es_glClear(GL_COLOR_BUFFER_BIT);
             gl4es_glClearColor(oldclear[0], oldclear[1], oldclear[2], oldclear[3]);
             // put back the draw buffers...
-            if (hardext.drawbuffers) gles_glDrawBuffers(glstate->fbo.fbo_draw->n_draw, glstate->fbo.fbo_draw->drawbuff);
+            if (hardext.drawbuffers) {
+                GLenum* restore = (GLenum*)alloca(glstate->fbo.fbo_draw->n_draw * sizeof(GLenum));
+                remap_drawbuffers_for_fbo(glstate->fbo.fbo_draw, glstate->fbo.fbo_draw->n_draw,
+                                          glstate->fbo.fbo_draw->drawbuff, restore, GL_FALSE);
+                gles_glDrawBuffers(glstate->fbo.fbo_draw->n_draw, restore);
+            }
             return;
         }
         break;
@@ -1802,7 +1865,7 @@ void APIENTRY_GL4ES gl4es_glClearBufferfv(GLenum buffer, GLint drawbuffer, const
         if (drawbuffer >= glstate->fbo.fbo_draw->n_draw) return; // GL_NONE...
         attch = glstate->fbo.fbo_draw->drawbuff[drawbuffer];
         if (attch == GL_NONE) return;
-        if (glstate->fbo.fbo_draw->id == 0) {
+        if (is_default_fbo(glstate->fbo.fbo_draw)) {
             if (!(attch == GL_FRONT || attch == GL_BACK)) {
                 errorShim(GL_INVALID_VALUE);
                 return;
@@ -1815,14 +1878,21 @@ void APIENTRY_GL4ES gl4es_glClearBufferfv(GLenum buffer, GLint drawbuffer, const
             GLfloat oldclear[4];
             LOAD_GLES_EXT(glDrawBuffers);
             // select the buffer...
-            if (hardext.drawbuffers) gles_glDrawBuffers(1, &attch);
+            GLenum phys_attch = attch;
+            if (!is_default_fbo(glstate->fbo.fbo_draw)) phys_attch = GL_COLOR_ATTACHMENT0 + drawbuffer;
+            if (hardext.drawbuffers) gles_glDrawBuffers(1, &phys_attch);
             gl4es_glGetFloatv(GL_COLOR_CLEAR_VALUE, oldclear);
             // how to convert the value? Most FB will be 8bits / component for now...
             gl4es_glClearColor(value[0], value[1], value[2], value[3]);
             gl4es_glClear(GL_COLOR_BUFFER_BIT);
             gl4es_glClearColor(oldclear[0], oldclear[1], oldclear[2], oldclear[3]);
             // put back the draw buffers...
-            if (hardext.drawbuffers) gles_glDrawBuffers(glstate->fbo.fbo_draw->n_draw, glstate->fbo.fbo_draw->drawbuff);
+            if (hardext.drawbuffers) {
+                GLenum* restore = (GLenum*)alloca(glstate->fbo.fbo_draw->n_draw * sizeof(GLenum));
+                remap_drawbuffers_for_fbo(glstate->fbo.fbo_draw, glstate->fbo.fbo_draw->n_draw,
+                                          glstate->fbo.fbo_draw->drawbuff, restore, GL_FALSE);
+                gles_glDrawBuffers(glstate->fbo.fbo_draw->n_draw, restore);
+            }
             return;
         }
         break;
