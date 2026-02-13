@@ -972,7 +972,9 @@ char* ConvertShaderBuiltInVariableOnly(const char* pEntry, int isVertex, shaderc
             "vec4(r);}\n "
             "//vec4 shadow2DProjLod(sampler2DShadow s, vec4 c,float l){float r=textureProjLod(s,c,l);return "
             "vec4(r);}\n";
-        Tmp = InplaceInsert(GetLine(Tmp, headline), wrapper, Tmp, &tmpsize);
+        if (!strstr(Tmp, "vec4 shadow1D(sampler1DShadow s, vec3 c)")) {
+            Tmp = InplaceInsert(GetLine(Tmp, headline), wrapper, Tmp, &tmpsize);
+        }
 
         char* GLESBackport;
         if (doInsertDefinitions) {
