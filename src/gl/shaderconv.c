@@ -1144,9 +1144,9 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t* need, i
         if (strstr(Tmp, "min(") || strstr(Tmp, "min (")) {
             Tmp = InplaceInsert(GetLine(Tmp, headline), HackAltMin, Tmp, &tmpsize);
         }
-        if (strstr(Tmp, "clamp(") || strstr(Tmp, "clamp (")) {
-            Tmp = InplaceInsert(GetLine(Tmp, headline), HackAltClamp, Tmp, &tmpsize);
-        }
+        // if (strstr(Tmp, "clamp(") || strstr(Tmp, "clamp (")) {
+        //     Tmp = InplaceInsert(GetLine(Tmp, headline), HackAltClamp, Tmp, &tmpsize);
+        // }
         if (strstr(Tmp, "mod(") || strstr(Tmp, "mod (")) {
             Tmp = InplaceInsert(GetLine(Tmp, headline), HackAltMod, Tmp, &tmpsize);
         }
