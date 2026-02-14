@@ -938,7 +938,7 @@ void APIENTRY_GL4ES gl4es_glLinkProgram(GLuint program) {
                 if (status != GL_TRUE) {
                     DBG(char tmp[500]; GLint length; LOAD_GLES2(glGetShaderInfoLog);
                         gles_glGetShaderInfoLog(glprogram->last_frag->id, 500, &length, tmp);
-                        SHUT_LOGD("Failed to compile patched shader, using default shader, log:\n%s\n", tmp);)
+                        DBG(SHUT_LOGD("Failed to compile patched shader, using default shader, log:\n%s\n", tmp);))
                     gles_glShaderSource(glprogram->last_frag->id, 1,
                                         (const GLchar* const*)&glprogram->last_frag->before_patch, NULL);
                     gles_glCompileShader(glprogram->last_frag->id);
@@ -971,7 +971,7 @@ void APIENTRY_GL4ES gl4es_glLinkProgram(GLuint program) {
                 LOAD_GLES2(glGetProgramInfoLog);
                 GLchar log_chars[log_length];
                 gles_glGetProgramInfoLog(glprogram->id, log_length, &log_length, log_chars);
-                SHUT_LOGD("%s", log_chars);
+                DBG(SHUT_LOGD("%s", log_chars));
             }
             // should DBG the linker error?
             DBG(SHUT_LOGD(" Link failled!\n"))

@@ -210,8 +210,6 @@ void APIENTRY_GL4ES gl4es_glCopyTexSubImage2D(GLenum target, GLint level, GLint 
             void* tmp = malloc(width * height * 2);
             gl4es_glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp);
             for (int y = 0; y < height; y++) {
-                SHUT_LOGD("will memcpy!!!");
-                SHUT_LOGD("will memcpy!!!!");
                 memcpy(buff + ((yoffset + y) * bound->width + xoffset) * 2, tmp + y * width * 2, width * 2);
             }
             free(tmp);
@@ -385,8 +383,9 @@ void APIENTRY_GL4ES gl4es_glGetTexImage(GLenum target, GLint level, GLenum forma
         // printf("texcopydata* glGetTexImage(0x%04X, %d, 0x%04x, 0x%04X, %p)\n", target, level, format, type, img);
         noerrorShim();
         if (!pixel_convert(bound->data, &dst, width, height, GL_RGBA, GL_UNSIGNED_BYTE, format, type, 0,
-                           glstate->texture.pack_align))
-            SHUT_LOGD("LIBGL: Error on pixel_convert while glGetTexImage\n");
+                           glstate->texture.pack_align)) {
+            DBG(SHUT_LOGD("LIBGL: Error on pixel_convert while glGetTexImage\n"));
+        }
     } else {
         // Setup an FBO the same size of the texture
         GLuint oldBind = bound->glname;

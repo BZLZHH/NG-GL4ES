@@ -1357,7 +1357,7 @@ void createMainFBO(int width, int height) {
     gles_glBindRenderbuffer(GL_RENDERBUFFER, current_rb);
     // Final check, and bind the fbo for future use
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        SHUT_LOGD("LIBGL: Error while creating main fbo (0x%04X)\n", status);
+        DBG(SHUT_LOGD("LIBGL: Error while creating main fbo (0x%04X)\n", status);)
         deleteMainFBO(glstate);
         gles_glBindFramebuffer(GL_FRAMEBUFFER, glstate->fbo.current_fb->id);
 

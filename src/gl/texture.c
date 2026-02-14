@@ -21,8 +21,11 @@
 // #define DEBUG
 #ifdef DEBUG
 #define DBG(a) a
+#define DBGLOGD(...) SHUT_LOGD(__VA_ARGS__)
 #else
 #define DBG(a)
+#define DBGLOGD(...)                                                                                                   \
+    {}
 #endif
 
 #ifndef GL_TEXTURE_STREAM_IMG
@@ -310,7 +313,7 @@ void internal2format_type(GLenum* internalformat, GLenum* format, GLenum* type) 
         if (format) offset +=
         snprintf(log_buffer + offset, sizeof(log_buffer) - offset, ", format: %s", PrintEnum(*format));
         if (type) offset += snprintf(log_buffer + offset, sizeof(log_buffer) - offset, ", type: %s", PrintEnum(*type));
-        snprintf(log_buffer + offset, sizeof(log_buffer) - offset, "\n"); SHUT_LOGD("%s", log_buffer))
+        snprintf(log_buffer + offset, sizeof(log_buffer) - offset, "\n"); DBGLOGD("%s", log_buffer))
     switch (*internalformat) {
 
     case GL_RGB10_A2:
@@ -577,7 +580,7 @@ void internal2format_type(GLenum* internalformat, GLenum* format, GLenum* type) 
         snprintf(log_buffer + offset2, sizeof(log_buffer) - offset2, ", format: %s", PrintEnum(*format));
         if (type) offset2 +=
         snprintf(log_buffer + offset2, sizeof(log_buffer) - offset2, ", type: %s", PrintEnum(*type));
-        snprintf(log_buffer2 + offset2, sizeof(log_buffer2) - offset2, "\n"); SHUT_LOGD("%s", log_buffer))
+        snprintf(log_buffer2 + offset2, sizeof(log_buffer2) - offset2, "\n"); DBGLOGD("%s", log_buffer))
 }
 
 static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLenum* type, GLenum intermediaryformat,
@@ -889,8 +892,8 @@ static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLen
             bound->type = dest_type;
             if (!pixel_convert(data, &pixels, width, height, *format, *type, dest_format, dest_type, 0,
                                glstate->texture.unpack_align)) {
-                SHUT_LOGD("LIBGL: swizzle error: (%s, %s -> %s, %s)\n", PrintEnum(*format), PrintEnum(*type),
-                          PrintEnum(dest_format), PrintEnum(dest_type));
+                DBGLOGD("LIBGL: swizzle error: (%s, %s -> %s, %s)\n", PrintEnum(*format), PrintEnum(*type),
+                        PrintEnum(dest_format), PrintEnum(dest_type));
                 return NULL;
             }
             *type = dest_type;
@@ -902,8 +905,8 @@ static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLen
                 bound->type = dest_type;
                 if (!pixel_convert(pixels, &pix2, width, height, *format, *type, dest_format, dest_type, 0,
                                    glstate->texture.unpack_align)) {
-                    SHUT_LOGD("LIBGL: swizzle error: (%s, %s -> %s, %s)\n", PrintEnum(dest_format),
-                              PrintEnum(dest_type), PrintEnum(internalformat), PrintEnum(dest_type));
+                    DBGLOGD("LIBGL: swizzle error: (%s, %s -> %s, %s)\n", PrintEnum(dest_format), PrintEnum(dest_type),
+                            PrintEnum(internalformat), PrintEnum(dest_type));
                     return NULL;
                 }
                 if (pix2 != pixels) {
@@ -917,8 +920,8 @@ static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLen
             if (raster_need_transform())
                 if (!pixel_transform(data, &pixels, width, height, *format, *type, glstate->raster.raster_scale,
                                      glstate->raster.raster_bias)) {
-                    SHUT_LOGD("LIBGL: swizzle/convert error: (%s, %s -> %s, %s)\n", PrintEnum(*format),
-                              PrintEnum(*type), PrintEnum(dest_format), PrintEnum(dest_type));
+                    DBGLOGD("LIBGL: swizzle/convert error: (%s, %s -> %s, %s)\n", PrintEnum(*format), PrintEnum(*type),
+                            PrintEnum(dest_format), PrintEnum(dest_type));
                     pix2 = pixels;
                 }
             if (pix2 != pixels && pixels != data) free(pixels);
@@ -1343,19 +1346,19 @@ GLenum minmag_float(GLenum filt) {
 
 void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                                        GLint border, GLenum format, GLenum type, const GLvoid* data) {
-    DBG(SHUT_LOGD(
-            "glTexImage2D on target=%s with unpack_row_length(%i), size(%i,%i) and skip(%i,%i), "
-            "format(internal)=%s(%s), type=%s, data=%p, level=%i (mipmap_need=%i, mipmap_auto=%i, base_level=%i, "
-            "max_level=%i) => texture=%u (streamed=%i), glstate->list.compiling=%d\n",
-            PrintEnum(target), glstate->texture.unpack_row_length, width, height, glstate->texture.unpack_skip_pixels,
-            glstate->texture.unpack_skip_rows, PrintEnum(format),
-            (internalformat == 3) ? "3" : (internalformat == 4 ? "4" : PrintEnum(internalformat)), PrintEnum(type),
-            data, level, glstate->texture.bound[glstate->texture.active][what_target(target)]->mipmap_need,
-            glstate->texture.bound[glstate->texture.active][what_target(target)]->mipmap_auto,
-            glstate->texture.bound[glstate->texture.active][what_target(target)]->base_level,
-            glstate->texture.bound[glstate->texture.active][what_target(target)]->max_level,
-            glstate->texture.bound[glstate->texture.active][what_target(target)]->texture,
-            glstate->texture.bound[glstate->texture.active][what_target(target)]->streamed, glstate->list.compiling);)
+    DBG(DBGLOGD("glTexImage2D on target=%s with unpack_row_length(%i), size(%i,%i) and skip(%i,%i), "
+                "format(internal)=%s(%s), type=%s, data=%p, level=%i (mipmap_need=%i, mipmap_auto=%i, base_level=%i, "
+                "max_level=%i) => texture=%u (streamed=%i), glstate->list.compiling=%d\n",
+                PrintEnum(target), glstate->texture.unpack_row_length, width, height,
+                glstate->texture.unpack_skip_pixels, glstate->texture.unpack_skip_rows, PrintEnum(format),
+                (internalformat == 3) ? "3" : (internalformat == 4 ? "4" : PrintEnum(internalformat)), PrintEnum(type),
+                data, level, glstate->texture.bound[glstate->texture.active][what_target(target)]->mipmap_need,
+                glstate->texture.bound[glstate->texture.active][what_target(target)]->mipmap_auto,
+                glstate->texture.bound[glstate->texture.active][what_target(target)]->base_level,
+                glstate->texture.bound[glstate->texture.active][what_target(target)]->max_level,
+                glstate->texture.bound[glstate->texture.active][what_target(target)]->texture,
+                glstate->texture.bound[glstate->texture.active][what_target(target)]->streamed,
+                glstate->list.compiling);)
 
     if (width == 0 || height == 0) {
         DBG(SHUT_LOGE("Error: width or height is zero."))
@@ -1446,7 +1449,7 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
          bound->binded_attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
         // non null data should be handled, but need to convert then...
         if (data != NULL) {
-            SHUT_LOGD("LIBGL: Warning, Depth/stencil texture resized and with data\n");
+            DBGLOGD("LIBGL: Warning, Depth/stencil texture resized and with data\n");
         }
         // get new size...
         GLsizei nheight = (hardext.npot) ? height : npot(height);
@@ -1468,9 +1471,9 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
                 gl4es_glBindRenderbuffer(GL_RENDERBUFFER, 0);
             } else {
                 errorGL();
-                DBG(SHUT_LOGD("gles_glTexImage2D(%d, %d, %s, %d, %d, %d, %s, %s, 0x%x)\n", GL_TEXTURE_2D, 0,
-                              PrintEnum(bound->internalformat), bound->nwidth, bound->nheight, 0,
-                              PrintEnum(bound->format), PrintEnum(bound->type), NULL);)
+                DBG(DBGLOGD("gles_glTexImage2D(%d, %d, %s, %d, %d, %d, %s, %s, 0x%x)\n", GL_TEXTURE_2D, 0,
+                            PrintEnum(bound->internalformat), bound->nwidth, bound->nheight, 0,
+                            PrintEnum(bound->format), PrintEnum(bound->type), NULL);)
                 gles_glTexImage2D(GL_TEXTURE_2D, 0, bound->internalformat, bound->nwidth, bound->nheight, 0,
                                   bound->format, bound->type, NULL);
                 DBG(CheckGLError(1);)
@@ -1618,28 +1621,28 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
 
             for (int y = height; y; --y) { /*
                  if (dst == NULL || src == NULL) {
-                     SHUT_LOGD("LIBGL: Invalid memory pointers in memcpy (src=%p, dst=%p)\n", src, dst);
+                     DBGLOGD("LIBGL: Invalid memory pointers in memcpy (src=%p, dst=%p)\n", src, dst);
                      return;  // Exit early or handle the error
                  }
                  // Before the unpacking loop
                  if (dstWidth <= 0 || imgWidth <= 0) {
-                     SHUT_LOGD("LIBGL: Invalid buffer sizes for memcpy (dstWidth=%d, imgWidth=%d)\n", dstWidth,
+                     DBGLOGD("LIBGL: Invalid buffer sizes for memcpy (dstWidth=%d, imgWidth=%d)\n", dstWidth,
                  imgWidth); return;  // Exit early or handle the error
                  }
                  if ((uintptr_t)src % sizeof(void*) != 0 || (uintptr_t)dst % sizeof(void*) != 0) {
-                     SHUT_LOGD("LIBGL: Memory is not aligned correctly for memcpy (src=%p, dst=%p)\n", src, dst);
+                     DBGLOGD("LIBGL: Memory is not aligned correctly for memcpy (src=%p, dst=%p)\n", src, dst);
                      return;  // Exit early or handle the error
                  }
                  if (width <= 0 || height <= 0) {
-                     SHUT_LOGD("LIBGL: Invalid width or height for texture update (width=%d, height=%d)\n", width,
+                     DBGLOGD("LIBGL: Invalid width or height for texture update (width=%d, height=%d)\n", width,
                  height); return;  // Exit early or handle the error
                  }
                  if ((uintptr_t)src + height * imgWidth > (uintptr_t)(src + height * imgWidth)) {
-                     SHUT_LOGD("LIBGL: Source buffer overflow detected (src=%p, expected=%p)\n", src, (src + height *
+                     DBGLOGD("LIBGL: Source buffer overflow detected (src=%p, expected=%p)\n", src, (src + height *
                  imgWidth)); return;  // Exit early or handle the error
                  }
                  if ((uintptr_t)dst + height * dstWidth > (uintptr_t)(dst + height * dstWidth)) {
-                     SHUT_LOGD("LIBGL: Destination buffer overflow detected (dst=%p, expected=%p)\n", dst, (dst + height
+                     DBGLOGD("LIBGL: Destination buffer overflow detected (dst=%p, expected=%p)\n", dst, (dst + height
                  * dstWidth)); return;  // Exit early or handle the error
                  }*/
 
@@ -1654,7 +1657,7 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
             GLvoid* conv = pixels;
             if (!pixel_convert(pixels, &conv, width, height, format, type, format, GL_UNSIGNED_BYTE, 0,
                                glstate->texture.unpack_align)) {
-                SHUT_LOGD("LIBGL: Error converting GL_UNSIGNED_INT_8_8_8_8 to GL_UNSIGNED_BYTE\n");
+                DBGLOGD("LIBGL: Error converting GL_UNSIGNED_INT_8_8_8_8 to GL_UNSIGNED_BYTE\n");
             } else {
                 if (conv != pixels && pixels != datab) free(pixels);
                 pixels = conv;
@@ -2085,7 +2088,7 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
         if (datab) {
             if (!pixel_convert(pixels, &bound->data, width, height, format, type, GL_RGBA, GL_UNSIGNED_BYTE, 0,
                                glstate->texture.unpack_align))
-                SHUT_LOGD("LIBGL: Error on pixel_convert when TEXCOPY in glTexImage2D\n");
+                DBGLOGD("LIBGL: Error on pixel_convert when TEXCOPY in glTexImage2D\n");
         } else {
             // memset(bound->data, 0, width*height*4);
         }
@@ -2136,7 +2139,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
     // void gles_glTexParameteri(glTexParameteri_ARG_EXPAND);
     LOAD_GLES(glTexParameteri);
     noerrorShim();
-    DBG(SHUT_LOGD(
+    DBG(DBGLOGD(
             "glTexSubImage2D on target=%s with unpack_row_length(%d), size(%d,%d), pos(%d,%d) and skip={%d,%d}, "
             "format=%s, type=%s, level=%d(base=%d, max=%d), mipmap={need=%d, auto=%d}, texture=%u, data=%p(vao=%p)\n",
             PrintEnum(target), glstate->texture.unpack_row_length, width, height, xoffset, yoffset,
@@ -2152,7 +2155,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
 
     gltexture_t* bound = glstate->texture.bound[glstate->texture.active][itarget];
     if (bound == NULL) {
-        SHUT_LOGD("LIBGL: Invalid bound texture (bound=%p)\n", bound);
+        DBGLOGD("LIBGL: Invalid bound texture (bound=%p)\n", bound);
         return; // Exit early or handle the error
     }
     if (GL4ES_AUTOMIPMAP_PLACEHOLDER) {
@@ -2177,28 +2180,28 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
         src += glstate->texture.unpack_skip_pixels * pixelSize + glstate->texture.unpack_skip_rows * imgWidth;
         for (int y = height; y; --y) { /*
              if (dst == NULL || src == NULL) {
-                 SHUT_LOGD("LIBGL: Invalid memory pointers in memcpy (src=%p, dst=%p)\n", src, dst);
+                 DBGLOGD("LIBGL: Invalid memory pointers in memcpy (src=%p, dst=%p)\n", src, dst);
                  return;  // Exit early or handle the error
              }
              // Before the unpacking loop
              if (dstWidth <= 0 || imgWidth <= 0) {
-                 SHUT_LOGD("LIBGL: Invalid buffer sizes for memcpy (dstWidth=%d, imgWidth=%d)\n", dstWidth, imgWidth);
+                 DBGLOGD("LIBGL: Invalid buffer sizes for memcpy (dstWidth=%d, imgWidth=%d)\n", dstWidth, imgWidth);
                  return;  // Exit early or handle the error
              }
              if ((uintptr_t)src % sizeof(void*) != 0 || (uintptr_t)dst % sizeof(void*) != 0) {
-                 SHUT_LOGD("LIBGL: Memory is not aligned correctly for memcpy (src=%p, dst=%p)\n", src, dst);
+                 DBGLOGD("LIBGL: Memory is not aligned correctly for memcpy (src=%p, dst=%p)\n", src, dst);
                  return;  // Exit early or handle the error
              }
              if (width <= 0 || height <= 0) {
-                 SHUT_LOGD("LIBGL: Invalid width or height for texture update (width=%d, height=%d)\n", width, height);
+                 DBGLOGD("LIBGL: Invalid width or height for texture update (width=%d, height=%d)\n", width, height);
                  return;  // Exit early or handle the error
              }
              if ((uintptr_t)src + height * imgWidth > (uintptr_t)(src + height * imgWidth)) {
-                 SHUT_LOGD("LIBGL: Source buffer overflow detected (src=%p, expected=%p)\n", src, (src + height *
+                 DBGLOGD("LIBGL: Source buffer overflow detected (src=%p, expected=%p)\n", src, (src + height *
              imgWidth)); return;  // Exit early or handle the error
              }
              if ((uintptr_t)dst + height * dstWidth > (uintptr_t)(dst + height * dstWidth)) {
-                 SHUT_LOGD("LIBGL: Destination buffer overflow detected (dst=%p, expected=%p)\n", dst, (dst + height *
+                 DBGLOGD("LIBGL: Destination buffer overflow detected (dst=%p, expected=%p)\n", dst, (dst + height *
              dstWidth)); return;  // Exit early or handle the error
              }*/
 
@@ -2216,7 +2219,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
         tmp += (yoffset * bound->width + xoffset) * 2;
         if (!pixel_convert(old, &tmp, width, height, format, type, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, bound->width,
                            glstate->texture.unpack_align)) {
-            SHUT_LOGD("LIBGL: swizzle error: (%#4x, %#4x -> GL_RGB, UNSIGNED_SHORT_5_6_5)\n", format, type);
+            DBGLOGD("LIBGL: swizzle error: (%#4x, %#4x -> GL_RGB, UNSIGNED_SHORT_5_6_5)\n", format, type);
         }
         format = GL_RGB;
         type = GL_UNSIGNED_SHORT_5_6_5;
@@ -2225,7 +2228,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
     {
         if (!pixel_convert(old, &pixels, width, height, format, type, bound->inter_format, bound->inter_type, 0,
                            glstate->texture.unpack_align)) {
-            SHUT_LOGD("LIBGL: Error in pixel_convert while glTexSubImage2D\n");
+            DBGLOGD("LIBGL: Error in pixel_convert while glTexSubImage2D\n");
         } else {
             format = bound->inter_format;
             type = bound->inter_type;
@@ -2233,7 +2236,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
                 GLvoid* pix2 = pixels;
                 if (!pixel_convert(pixels, &pix2, width, height, format, type, bound->format, bound->type, 0,
                                    glstate->texture.unpack_align)) {
-                    SHUT_LOGD("LIBGL: Error in pixel_convert while glTexSubImage2D\n");
+                    DBGLOGD("LIBGL: Error in pixel_convert while glTexSubImage2D\n");
                 }
                 if (pixels != pix2 && pixels != old) free(pixels);
                 pixels = pix2;
@@ -2366,7 +2369,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
         GLvoid* tmp = (char*)bound->data + (yoffset * bound->width + xoffset) * 4;
         if (!pixel_convert(pixels, &tmp, width, height, format, type, GL_RGBA, GL_UNSIGNED_BYTE, bound->width,
                            glstate->texture.unpack_align))
-            SHUT_LOGD("LIBGL: Error on pixel_convert while TEXCOPY in glTexSubImage2D\n");
+            DBGLOGD("LIBGL: Error on pixel_convert while TEXCOPY in glTexSubImage2D\n");
     }
 
     if (pixels != datab) free((GLvoid*)pixels);
@@ -2405,12 +2408,12 @@ void APIENTRY_GL4ES gl4es_glTexSubImage2D(GLenum target, GLint level, GLint xoff
         return;
     }
     if (!data) {
-        SHUT_LOGD("LIBGL: glTexSubImage2D called with NULL data\n");
+        DBGLOGD("LIBGL: glTexSubImage2D called with NULL data\n");
         return;
     }
     int pixelSize = pixel_sizeof(format, type);
     if (pixelSize <= 0) {
-        SHUT_LOGD("LIBGL: invalid pixel size (format/type) in glTexSubImage2D\n");
+        DBGLOGD("LIBGL: invalid pixel size (format/type) in glTexSubImage2D\n");
         return;
     }
 
@@ -2429,20 +2432,20 @@ void APIENTRY_GL4ES gl4es_glTexSubImage2D(GLenum target, GLint level, GLint xoff
 
         size_t src_row_raw = up_row_pixels * (size_t)pixelSize;
         if (up_row_pixels != 0 && src_row_raw / up_row_pixels != (size_t)pixelSize) {
-            SHUT_LOGD("LIBGL: overflow src_row_raw\n");
+            DBGLOGD("LIBGL: overflow src_row_raw\n");
             return;
         }
         size_t src_row_bytes = pad_to(src_row_raw, up_align);
 
         size_t dst_row_bytes = ui_width * (size_t)pixelSize;
         if (ui_width != 0 && dst_row_bytes / ui_width != (size_t)pixelSize) {
-            SHUT_LOGD("LIBGL: overflow dst_row_bytes\n");
+            DBGLOGD("LIBGL: overflow dst_row_bytes\n");
             return;
         }
 
         size_t total_dst = dst_row_bytes * ui_height;
         if (ui_height != 0 && total_dst / ui_height != dst_row_bytes) {
-            SHUT_LOGD("LIBGL: overflow total_dst\n");
+            DBGLOGD("LIBGL: overflow total_dst\n");
             return;
         }
 
@@ -2451,31 +2454,31 @@ void APIENTRY_GL4ES gl4es_glTexSubImage2D(GLenum target, GLint level, GLint xoff
 
         size_t skip_pixels_bytes = skip_pixels * (size_t)pixelSize;
         if (skip_pixels != 0 && skip_pixels_bytes / skip_pixels != (size_t)pixelSize) {
-            SHUT_LOGD("LIBGL: overflow skip_pixels_bytes\n");
+            DBGLOGD("LIBGL: overflow skip_pixels_bytes\n");
             return;
         }
 
         size_t skip_rows_bytes = skip_rows * src_row_bytes;
         if (skip_rows != 0 && skip_rows_bytes / skip_rows != src_row_bytes) {
-            SHUT_LOGD("LIBGL: overflow skip_rows_bytes\n");
+            DBGLOGD("LIBGL: overflow skip_rows_bytes\n");
             return;
         }
 
         if (up_row_pixels < (skip_pixels + ui_width)) {
-            SHUT_LOGD("LIBGL: unpack_row_length (%zu) too small for skip+width (%zu)\n", up_row_pixels,
-                      (size_t)(skip_pixels + ui_width));
+            DBGLOGD("LIBGL: unpack_row_length (%zu) too small for skip+width (%zu)\n", up_row_pixels,
+                    (size_t)(skip_pixels + ui_width));
             return;
         }
 
         size_t src_offset = skip_rows_bytes + skip_pixels_bytes;
         if (src_offset < skip_rows_bytes || src_offset < skip_pixels_bytes) {
-            SHUT_LOGD("LIBGL: overflow src_offset\n");
+            DBGLOGD("LIBGL: overflow src_offset\n");
             return;
         }
 
         temp_pixels = (GLubyte*)malloc(total_dst);
         if (!temp_pixels) {
-            SHUT_LOGD("LIBGL: malloc failed in glTexSubImage2D (bytes=%zu)\n", total_dst);
+            DBGLOGD("LIBGL: malloc failed in glTexSubImage2D (bytes=%zu)\n", total_dst);
             return;
         }
 
@@ -2512,40 +2515,40 @@ void APIENTRY_GL4ES gl4es_glTexSubImage1D(GLenum target, GLint level, GLint xoff
 }
 
 GLboolean APIENTRY_GL4ES gl4es_glIsTexture(GLuint texture) {
-    DBG(SHUT_LOGD("glIsTexture(%d):", texture);)
+    DBG(DBGLOGD("glIsTexture(%d):", texture);)
     if (!glstate) {
-        DBG(SHUT_LOGD("GL_FALSE\n");) return GL_FALSE;
+        DBG(DBGLOGD("GL_FALSE\n");) return GL_FALSE;
     }
     noerrorShim();
     if (!texture) {
-        DBG(SHUT_LOGD("%s\n", glstate->texture.zero->valid ? "GL_TRUE" : "GL_FALSE");)
+        DBG(DBGLOGD("%s\n", glstate->texture.zero->valid ? "GL_TRUE" : "GL_FALSE");)
         return glstate->texture.zero->valid;
     }
     khint_t k;
     khash_t(tex)* list = glstate->texture.list;
     if (!list) {
-        DBG(SHUT_LOGD("GL_FALSE\n");)
+        DBG(DBGLOGD("GL_FALSE\n");)
         return GL_FALSE;
     }
     k = kh_get(tex, list, texture);
     gltexture_t* tex = NULL;
     if (k == kh_end(list)) {
-        DBG(SHUT_LOGD("GL_FALSE\n");)
+        DBG(DBGLOGD("GL_FALSE\n");)
         return GL_FALSE;
     }
-    DBG(SHUT_LOGD("GL_TRUE\n");)
+    DBG(DBGLOGD("GL_TRUE\n");)
     return GL_TRUE;
 }
 
 void APIENTRY_GL4ES gl4es_glTexStorage1D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width) {
-    DBG(SHUT_LOGD("glTexStorage1D(%s, %d, %s, %d)\n", PrintEnum(target), levels, PrintEnum(internalformat), width);)
+    DBG(DBGLOGD("glTexStorage1D(%s, %d, %s, %d)\n", PrintEnum(target), levels, PrintEnum(internalformat), width);)
     gl4es_glTexImage1D(target, 0, internalformat, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 }
 void APIENTRY_GL4ES gl4es_glTexStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
                                          GLsizei height) {
     // (could be implemented in GLES3.0)
-    DBG(SHUT_LOGD("glTexStorage2D(%s, %d, %s, %d, %d)\n", PrintEnum(target), levels, PrintEnum(internalformat), width,
-                  height);)
+    DBG(DBGLOGD("glTexStorage2D(%s, %d, %s, %d, %d)\n", PrintEnum(target), levels, PrintEnum(internalformat), width,
+                height);)
     if (!levels) {
         noerrorShim();
         return;

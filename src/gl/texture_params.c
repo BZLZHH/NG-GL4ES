@@ -628,8 +628,8 @@ void APIENTRY_GL4ES gl4es_glGetTexLevelParameterfv(GLenum target, GLint level, G
 
         default:
             errorShim(GL_INVALID_ENUM); // Wrong here...
-            SHUT_LOGD("Stubbed glGetTexLevelParameteriv(%s, %i, %s, %p)\n", PrintEnum(target), level, PrintEnum(pname),
-                      params);
+            DBG(SHUT_LOGD("Stubbed glGetTexLevelParameteriv(%s, %i, %s, %p)\n", PrintEnum(target), level,
+                          PrintEnum(pname), params);)
         }
     }
 }

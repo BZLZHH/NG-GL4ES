@@ -16,7 +16,7 @@
 
 #include "../glx/hardext.h"
 
-//#define DEBUG
+// #define DEBUG
 #ifdef DEBUG
 #define DBG(a) a
 #else
@@ -27,17 +27,17 @@
 #include "gl_lookup.h"
 
 #if (!defined(_WIN32) || defined(_WIN64)) && !defined(__MINGW32__)
-void gl4es_Stub(void *x, ...) {
+void gl4es_Stub(void* x, ...) {
     return;
 }
 #else
-//TODO: if need use STUB with different argnum, the macro must be redesigned
-void APIENTRY_GL4ES gl4es_Stub(void *x) {}
+// TODO: if need use STUB with different argnum, the macro must be redesigned
+void APIENTRY_GL4ES gl4es_Stub(void* x) {}
 #endif
 
-void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
+void* APIENTRY_GL4ES gl4es_GetProcAddress(const char* name) {
     DBG(SHUT_LOGD("glGetProcAddress(\"%s\")", name);)
-	/*
+    /*
     // generated gles wrappers
     #include "glesfuncs.inc"
 
@@ -101,7 +101,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EXT(glBindVertexArray);
     _EXT(glDeleteVertexArrays);
     _EXT(glIsVertexArray);
-    
+
     // GL_ARB_frameBuffer_ext
     if(hardext.fbo) {
         _EX(glFramebufferTexture1D);
@@ -167,7 +167,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
         // draw_buffer_2 (partial)
         _EXT(glColorMaskIndexed)
     }
-    
+
     // GL_EXT_vertex_array
     _EXT(glArrayElement);
     _EXT(glDrawArrays);
@@ -264,7 +264,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     THUNK(us, GLushort);
     THUNK(f, GLfloat);
     #undef THUNK
-    
+
     _EX(glPointParameterf);
     _EX(glPointParameterfv);
     _ARB(glPointParameterf);
@@ -474,7 +474,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
 
     _EX(glPointParameteri);
     _EX(glPointParameteriv);
-    
+
     _EX(glFogCoordPointer);
     if(hardext.esversion>1) {
         // EXT_fog_coord supported
@@ -485,14 +485,14 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
         _EXT(glFogCoordPointer);
     }
     */
-	/*STUB(glEdgeFlagPointerEXT);
+    /*STUB(glEdgeFlagPointerEXT);
     STUB(glIndexPointerEXT);*/
-	
+
     STUB(glClearIndex);
     STUB(glEdgeFlagv);
     STUB(glIndexMask);
-    
-    //EXT_direct_state_access
+
+    // EXT_direct_state_access
     _EX(glClientAttribDefault);
     _EX(glPushClientAttribDefault);
     _EX(glMatrixLoadf);
@@ -710,7 +710,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EXT(glMatrixMultTransposef);
     _EXT(glMatrixMultTransposed);
 
-    if(globals4es.queries) {
+    if (globals4es.queries) {
         _EX(glGenQueries);
         _EX(glIsQuery);
         _EX(glDeleteQueries);
@@ -737,34 +737,34 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     // GL_ARB_multisample
     _ARB(glSampleCoverage);
 
-    // extra shaders stuff
-    #define THUNK(suffix) \
-    _EX(glVertexAttrib1##suffix); \
-    _EX(glVertexAttrib2##suffix); \
-    _EX(glVertexAttrib3##suffix); \
-    _EX(glVertexAttrib4##suffix); \
-    _EXT(glVertexAttrib1##suffix); \
-    _EXT(glVertexAttrib2##suffix); \
-    _EXT(glVertexAttrib3##suffix); \
+// extra shaders stuff
+#define THUNK(suffix)                                                                                                  \
+    _EX(glVertexAttrib1##suffix);                                                                                      \
+    _EX(glVertexAttrib2##suffix);                                                                                      \
+    _EX(glVertexAttrib3##suffix);                                                                                      \
+    _EX(glVertexAttrib4##suffix);                                                                                      \
+    _EXT(glVertexAttrib1##suffix);                                                                                     \
+    _EXT(glVertexAttrib2##suffix);                                                                                     \
+    _EXT(glVertexAttrib3##suffix);                                                                                     \
     _EXT(glVertexAttrib4##suffix);
     THUNK(s);
     THUNK(d);
     THUNK(sv);
     THUNK(dv);
-    #undef THUNK
-    #define THUNK(suffix) \
-    _EX(glVertexAttrib4##suffix##v); \
-    _EX(glVertexAttrib4u##suffix##v); \
-    _EX(glVertexAttrib4N##suffix##v); \
-    _EX(glVertexAttrib4Nu##suffix##v);\
-    _EXT(glVertexAttrib4##suffix##v); \
-    _EXT(glVertexAttrib4u##suffix##v); \
-    _EXT(glVertexAttrib4N##suffix##v); \
+#undef THUNK
+#define THUNK(suffix)                                                                                                  \
+    _EX(glVertexAttrib4##suffix##v);                                                                                   \
+    _EX(glVertexAttrib4u##suffix##v);                                                                                  \
+    _EX(glVertexAttrib4N##suffix##v);                                                                                  \
+    _EX(glVertexAttrib4Nu##suffix##v);                                                                                 \
+    _EXT(glVertexAttrib4##suffix##v);                                                                                  \
+    _EXT(glVertexAttrib4u##suffix##v);                                                                                 \
+    _EXT(glVertexAttrib4N##suffix##v);                                                                                 \
     _EXT(glVertexAttrib4Nu##suffix##v);
     THUNK(b);
     THUNK(s);
     THUNK(i);
-    #undef THUNK
+#undef THUNK
     _EX(glGetVertexAttribdv);
     _EXT(glGetVertexAttribdv);
     _ARB(glGetVertexAttribdv);
@@ -962,7 +962,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EXT(glProgramUniformMatrix3fv);
     _EXT(glProgramUniformMatrix4fv);
 
-    //Binary program
+    // Binary program
     _EX(glGetProgramBinary);
     _EX(glProgramBinary);
     _EXT(glGetProgramBinary);
@@ -970,7 +970,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _ARB(glGetProgramBinary);
     _ARB(glProgramBinary);
 
-    //ARB_draw_elements_base_vertex / EXT_draw_elements_base_vertex
+    // ARB_draw_elements_base_vertex / EXT_draw_elements_base_vertex
     _EX(glDrawElementsBaseVertex);
     _EXT(glDrawElementsBaseVertex);
     _ARB(glDrawElementsBaseVertex);
@@ -981,7 +981,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EXT(glMultiDrawElementsBaseVertex);
     _ARB(glMultiDrawElementsBaseVertex);
 
-    //GL_ARB_draw_instanced
+    // GL_ARB_draw_instanced
     _EX(glDrawArraysInstanced);
     _EXT(glDrawArraysInstanced); // not sure _EXT is needed...
     _ARB(glDrawArraysInstanced);
@@ -992,7 +992,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EXT(glDrawElementsInstancedBaseVertex);
     _ARB(glDrawElementsInstancedBaseVertex);
 
-    //GL_ARB_instanced_arrays
+    // GL_ARB_instanced_arrays
     _EX(glVertexAttribDivisor);
     _EXT(glVertexAttribDivisor);
     _ARB(glVertexAttribDivisor);
@@ -1005,7 +1005,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     STUB(glUniformMatrix3x4fv);
     STUB(glUniformMatrix4x3fv);
 
-    //TexStorage
+    // TexStorage
     _EX(glTexStorage1D);
     _EX(glTexStorage2D);
     _EX(glTexStorage3D);
@@ -1013,8 +1013,8 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     _EX(glClampColor);
     _EXT(glClampColor);
 
-    //GL_ARB_vertex_program
-    if(hardext.esversion>1) {
+    // GL_ARB_vertex_program
+    if (hardext.esversion > 1) {
         _EX(glProgramStringARB);
         _EX(glBindProgramARB);
         _EX(glDeleteProgramsARB);
@@ -1044,7 +1044,7 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
 
     _EX(glMemoryBarrier);
 
-    //Sampler
+    // Sampler
     _EX(glGenSamplers);
     _EX(glBindSampler);
     _EX(glDeleteSamplers);
@@ -1066,11 +1066,10 @@ void* APIENTRY_GL4ES gl4es_GetProcAddress(const char *name) {
     DBG(SHUT_LOGD("NULL\n");)
     void* proc = dlsym(RTLD_DEFAULT, (const char*)name);
     if (!proc) {
-        fprintf(stderr, "Failed to get OpenGL function %s: %s\n", name, dlerror());
         SHUT_LOGD("[WARNING] Failed to get OpenGL function: %s", (const char*)name);
         return NULL;
     }
     return proc;
-    //if (!globals4es.silentstub) SHUT_LOGD("GL4ES GetProcAddress: %s not found.\n", name);
-    //return NULL;
+    // if (!globals4es.silentstub) SHUT_LOGD("GL4ES GetProcAddress: %s not found.\n", name);
+    // return NULL;
 }

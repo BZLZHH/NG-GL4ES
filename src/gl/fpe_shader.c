@@ -862,11 +862,11 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t* state)
 
 const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t* state) {
     // state can be NULL, so provide a 0 default
-    if(!shad_cap) shad_cap = 1024;
-    if(!shad) shad = (char*)malloc(shad_cap);
+    if (!shad_cap) shad_cap = 1024;
+    if (!shad) shad = (char*)malloc(shad_cap);
     fpe_state_t default_state = {0};
     int is_default = !need;
-    if(!state) state = &default_state;
+    if (!state) state = &default_state;
     int headers = 0;
     int lighting = state->lighting;
     int twosided = state->twosided && lighting;
@@ -1481,9 +1481,10 @@ const char* const* fpe_CustomVertexShader(const char* initial, fpe_state_t* stat
     ShadAppend(initial);
 
     int color = default_fragment ? (strstr(initial, "_gl4es_Color") ? 0 : 1) : 0; // need to add a simple color variant?
-    if (default_fragment)
-        SHUT_LOGD("fpe_CustomVertexShader(%p, %p, %d)\n%s\ncolor=%d\n", initial, state, default_fragment, initial,
-                  color);
+    if (default_fragment) {
+        DBG(SHUT_LOGD("fpe_CustomVertexShader(%p, %p, %d)\n%s\ncolor=%d\n", initial, state, default_fragment, initial,
+                      color);)
+    }
     // add some uniform and varying
     if (planes) {
         for (int i = 0; i < hardext.maxplanes; i++) {

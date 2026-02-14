@@ -26,7 +26,7 @@ typedef void(APIENTRY_GLES* glTexSubImage3D_PTR)(GLenum target, GLint level, GLi
                                                  GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                                                  GLenum format, GLenum type, const GLvoid* data);
 typedef void(APIENTRY_GLES* glCopyTexSubImage3D_PTR)(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                                    GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+                                                     GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 
 // #define DEBUG
 #ifdef DEBUG
@@ -250,12 +250,12 @@ void APIENTRY_GL4ES gl4es_glTexSubImage3D(GLenum target, GLint level, GLint xoff
     realize_bound(glstate->texture.active, target);
 
     if (!data) {
-        SHUT_LOGD("LIBGL: glTexSubImage3D called with NULL data\n");
+        DBG(SHUT_LOGD("LIBGL: glTexSubImage3D called with NULL data\n");)
         return;
     }
     int pixelSize = pixel_sizeof(format, type);
     if (pixelSize <= 0) {
-        SHUT_LOGD("LIBGL: invalid pixel size (format/type) in glTexSubImage3D\n");
+        DBG(SHUT_LOGD("LIBGL: invalid pixel size (format/type) in glTexSubImage3D\n");)
         return;
     }
 
@@ -291,7 +291,7 @@ void APIENTRY_GL4ES gl4es_glTexSubImage3D(GLenum target, GLint level, GLint xoff
 
         temp_pixels = (GLubyte*)malloc(total_dst);
         if (!temp_pixels) {
-            SHUT_LOGD("LIBGL: malloc failed in glTexSubImage3D (bytes=%zu)\n", total_dst);
+            DBG(SHUT_LOGD("LIBGL: malloc failed in glTexSubImage3D (bytes=%zu)\n", total_dst));
             return;
         }
 
@@ -348,8 +348,8 @@ void APIENTRY_GL4ES gl4es_glTexStorage3D(GLenum target, GLsizei levels, GLenum i
         bound->mipmap_need = 1;
         bound->mipmap_auto = 1;
         for (int i = 1; i <= mlevel; ++i)
-            gl4es_glTexImage3D(target, i, internalformat, nlevel3d(width, i), nlevel3d(height, i),
-                               nlevel3d(depth, i), 0, bound->format, bound->type, NULL);
+            gl4es_glTexImage3D(target, i, internalformat, nlevel3d(width, i), nlevel3d(height, i), nlevel3d(depth, i),
+                               0, bound->format, bound->type, NULL);
         noerrorShim();
         return;
     }
