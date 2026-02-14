@@ -3,7 +3,7 @@
 
 #define MAJOR 0
 #define MINOR 4
-#define REVISION 3
+#define REVISION 4
 #define VERSION_TYPE "Release "
 #define VERSION_SUFFIX ""
 #define RELEASE 1
