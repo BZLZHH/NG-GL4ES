@@ -65,6 +65,11 @@ static int inline maxlevel(int w, int h) {
     return mlevel;
 }
 
+static inline GLboolean bgra_supported_type(GLenum type) {
+    // GL_EXT_texture_format_BGRA8888 only guarantees BGRA with UNSIGNED_BYTE on GLES.
+    return hardext.bgra8888 && (type == GL_UNSIGNED_BYTE);
+}
+
 static int is_fake_compressed_rgb(GLenum internalformat) {
     if (internalformat == GL_COMPRESSED_RGB) return 1;
     if (internalformat == GL_COMPRESSED_RGB_S3TC_DXT1_EXT) return 1;
@@ -577,10 +582,12 @@ void internal2format_type(GLenum* internalformat, GLenum* format, GLenum* type) 
 static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLenum* type, GLenum intermediaryformat,
                              GLenum internalformat, const GLvoid* data, gltexture_t* bound) {
     if (format && *format != GL_BGRA && *format != GL_BGR && *format != GL_BGRA8_EXT) return data;
+    if (format && *format == GL_BGRA8_EXT) *format = GL_BGRA;
     int convert = 0;
     GLenum dest_format = GL_RGBA;
     GLenum dest_type = GL_UNSIGNED_BYTE;
     int check = 1;
+    const GLboolean bgra_ok = bgra_supported_type(*type);
     // compressed format are not handled here, so mask them....
     if (is_fake_compressed_rgb(intermediaryformat)) intermediaryformat = GL_RGB;
     if (is_fake_compressed_rgba(intermediaryformat)) intermediaryformat = GL_RGBA;
@@ -707,29 +714,17 @@ static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLen
             check = 0;
             break;
         case GL_BGRA:
-            if (hardext.bgra8888 && ((*type) == GL_UNSIGNED_BYTE || (*type) == GL_FLOAT || (*type) == GL_HALF_FLOAT ||
-#ifdef __BIG_ENDIAN__
-                                     (((*type) == GL_UNSIGNED_INT_8_8_8_8_REV) && hardext.rgba8888rev)
-#else
-                                     (((*type) == GL_UNSIGNED_INT_8_8_8_8) && hardext.rgba8888)
-#endif
-                                         )) {
+            if (bgra_ok) {
                 dest_format = GL_BGRA;
                 //*format = GL_BGRA;
             } else {
                 convert = 1;
-                if (hardext.bgra8888 &&
-#ifdef __BIG_ENDIAN__
-                    (*type == GL_UNSIGNED_INT_8_8_8_8_REV)
-#else
-                    (*type == GL_UNSIGNED_INT_8_8_8_8)
-#endif
-                ) {
-                    //*format = GL_BGRA;    //only type needs conversion
-                    dest_format = GL_BGRA;
-                    check = 0;
-                }
+                dest_format = GL_RGBA;
             }
+            break;
+        case GL_BGR:
+            dest_format = GL_RGB;
+            convert = 1;
             break;
         case GL_DEPTH32F_STENCIL8:
         case GL_DEPTH24_STENCIL8:
@@ -946,10 +941,12 @@ static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLen
 }
 
 GLenum swizzle_internalformat(GLenum* internalformat, GLenum format, GLenum type) {
+    if (format == GL_BGRA8_EXT) format = GL_BGRA;
     if (internalformat && format && format != GL_BGRA && format != GL_BGR && format != GL_BGRA8_EXT)
         return *internalformat;
     GLenum ret = *internalformat;
-    GLenum sret;
+    GLenum sret = ret;
+    const GLboolean bgra_ok = bgra_supported_type(type);
     switch (*internalformat) {
     case GL_RED:
     case GL_R:
@@ -1000,7 +997,7 @@ GLenum swizzle_internalformat(GLenum* internalformat, GLenum format, GLenum type
             sret = ret = GL_RGBA4;
             break;
         }
-        if (format == GL_BGRA && hardext.bgra8888) {
+        if (format == GL_BGRA && bgra_ok) {
             sret = ret = GL_BGRA;
         }
     case GL_RGBA8:
@@ -1009,7 +1006,7 @@ GLenum swizzle_internalformat(GLenum* internalformat, GLenum format, GLenum type
     case GL_RGBA32F:
         break;
     case 4:
-        if (format == GL_BGRA && hardext.bgra8888) {
+        if (format == GL_BGRA && bgra_ok) {
             ret = GL_BGRA;
             sret = GL_BGRA;
         } else {
@@ -1089,8 +1086,9 @@ GLenum swizzle_internalformat(GLenum* internalformat, GLenum format, GLenum type
         ret = GL_COMPRESSED_RGBA;
         sret = GL_RGBA;
         break;
+    case GL_BGRA8_EXT:
     case GL_BGRA:
-        if (hardext.bgra8888) {
+        if (bgra_ok) {
             ret = GL_BGRA;
             sret = GL_BGRA;
         } else {

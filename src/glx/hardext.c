@@ -357,9 +357,9 @@ void GetHardwareExtensions(int notest) {
     S("GL_EXT_blend_func_extended ", blend_func_extended, 0);
     S("GL_EXT_multi_draw_arrays ", multidraw, 0);
     if (!globals4es.nobgra) {
-        // S("GL_EXT_texture_format_BGRA8888 ", bgra8888, 1);
-        hardext.bgra8888 = false;
-        LOGD("Extension GL_EXT_texture_format_BGRA8888 never used")
+        S("GL_EXT_texture_format_BGRA8888 ", bgra8888, 1);
+        // hardext.bgra8888 = false;
+        // LOGD("Extension GL_EXT_texture_format_BGRA8888 never used")
     }
     if (!globals4es.nodepthtex) {
         S("GL_OES_depth_texture ", depthtex, 1);
