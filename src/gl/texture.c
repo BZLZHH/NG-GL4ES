@@ -90,6 +90,7 @@ static int is_fake_compressed_rgba(GLenum internalformat) {
 // The real function to convert format
 void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
     if (format && (*format == GL_BGRA || *format == GL_BGR || *format == GL_BGRA8_EXT)) return;
+    if (type && *type == GL_UNSIGNED_INT_8_8_8_8) return;
 
     switch (*internal_format) {
     case GL_DEPTH_COMPONENT16:
@@ -581,7 +582,9 @@ void internal2format_type(GLenum* internalformat, GLenum* format, GLenum* type) 
 
 static void* swizzle_texture(GLsizei width, GLsizei height, GLenum* format, GLenum* type, GLenum intermediaryformat,
                              GLenum internalformat, const GLvoid* data, gltexture_t* bound) {
-    if (format && *format != GL_BGRA && *format != GL_BGR && *format != GL_BGRA8_EXT) return data;
+    if (format && *format != GL_BGRA && *format != GL_BGR && *format != GL_BGRA8_EXT &&
+        *type != GL_UNSIGNED_INT_8_8_8_8)
+        return data;
     if (format && *format == GL_BGRA8_EXT) *format = GL_BGRA;
     int convert = 0;
     GLenum dest_format = GL_RGBA;
@@ -1645,6 +1648,20 @@ void APIENTRY_GL4ES gl4es_glTexImage2D(GLenum target, GLint level, GLint interna
                 dst += dstWidth;
             }
         }
+
+#ifndef __BIG_ENDIAN__
+        if (format == GL_RGBA && type == GL_UNSIGNED_INT_8_8_8_8 && !hardext.rgba8888) {
+            GLvoid* conv = pixels;
+            if (!pixel_convert(pixels, &conv, width, height, format, type, format, GL_UNSIGNED_BYTE, 0,
+                               glstate->texture.unpack_align)) {
+                SHUT_LOGD("LIBGL: Error converting GL_UNSIGNED_INT_8_8_8_8 to GL_UNSIGNED_BYTE\n");
+            } else {
+                if (conv != pixels && pixels != datab) free(pixels);
+                pixels = conv;
+                type = GL_UNSIGNED_BYTE;
+            }
+        }
+#endif
 
         GLvoid* old = pixels;
         pixels = (GLvoid*)swizzle_texture(width, height, &format, &type, internalformat, new_format, old, bound);
