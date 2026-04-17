@@ -108,6 +108,7 @@ int adjust_vertices(GLenum mode, int nb) {
     t.size = s;                                                                                                        \
     t.type = type;                                                                                                     \
     t.stride = stride;                                                                                                 \
+    ensureShadowBufferData(glstate->vao->vertex);                                                                      \
     t.pointer = (void*)((char*)pointer + (uintptr_t)((glstate->vao->vertex) ? glstate->vao->vertex->data : 0));        \
     t.real_buffer = (glstate->vao->vertex) ? glstate->vao->vertex->real_buffer : 0;                                    \
     t.real_pointer = (glstate->vao->vertex) ? pointer : 0;                                                             \

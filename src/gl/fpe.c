@@ -33,7 +33,7 @@
 #ifdef DEBUG
 #pragma GCC optimize 0
 #define DBG(a) a
-#define DBGLOGD(...) SHUT_LOGD(__VA_ARGS__);
+#define DBGLOGD(...) SHUT_LOGD(__VA_ARGS__)
 #else
 #define DBG(a)
 #define DBGLOGD(...)                                                                                                   \
@@ -817,6 +817,7 @@ void APIENTRY_GL4ES fpe_glDrawElements(GLenum mode, GLsizei count, GLenum type, 
     if (glstate->vao->elements && glstate->vao->elements->real_buffer && indices >= glstate->vao->elements->data &&
         indices <= ((void*)((char*)glstate->vao->elements->data + glstate->vao->elements->size))) {
         use_vbo = 1;
+        ensureShadowBufferData(glstate->vao->elements);
         bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
         indices = (GLvoid*)((uintptr_t)indices - (uintptr_t)(glstate->vao->elements->data));
         DBG(DBGLOGD("Using VBO %d for indices\n", glstate->vao->elements->real_buffer);)
@@ -888,6 +889,7 @@ void APIENTRY_GL4ES fpe_glDrawElementsInstanced(GLenum mode, GLsizei count, GLen
     if (glstate->vao->elements && glstate->vao->elements->real_buffer && indices >= glstate->vao->elements->data &&
         indices <= ((void*)((char*)glstate->vao->elements->data + glstate->vao->elements->size))) {
         use_vbo = 1;
+        ensureShadowBufferData(glstate->vao->elements);
         bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
         inds = (void*)((uintptr_t)indices - (uintptr_t)(glstate->vao->elements->data));
     } else {
@@ -902,7 +904,8 @@ void APIENTRY_GL4ES fpe_glDrawElementsInstanced(GLenum mode, GLsizei count, GLen
             {
                 vertexattrib_t* w = &glstate->vao->vertexattrib[i];
                 if (w->divisor && w->enabled) {
-                    char* current = (char*)((uintptr_t)w->pointer + ((w->buffer) ? (uintptr_t)w->buffer->data : 0));
+                ensureShadowBufferData(w->buffer);
+                char* current = (char*)((uintptr_t)w->pointer + ((w->buffer) ? (uintptr_t)w->buffer->data : 0));
                     int stride = w->stride;
                     if (!stride) stride = gl_sizeof(w->type) * w->size;
                     current += (id / w->divisor) * stride;
@@ -1476,6 +1479,7 @@ void realize_glenv(int ispoint, int first, int count, GLenum type, const void* i
             // check if new value has to be sent to hardware
             if (v->enabled) {
                 // array case
+                ensureShadowBufferData(w->buffer);
                 void* ptr = (void*)((uintptr_t)w->pointer + ((w->buffer) ? (uintptr_t)w->buffer->data : 0));
                 if (dirty || v->size != w->size || v->type != w->type || v->normalized != w->normalized ||
                     v->stride != w->stride || v->buffer != w->buffer || (w->real_buffer == 0 && v->pointer != ptr) ||
@@ -1545,7 +1549,8 @@ void realize_glenv(int ispoint, int first, int count, GLenum type, const void* i
                 char* current = (char*)glstate->vavalue[i];
                 GLfloat tmp[4] = {0.0f, 0.0f, 0.0f, 1.0f};
                 if (w->divisor && w->enabled) {
-                    current = (char*)((uintptr_t)w->pointer + ((w->buffer) ? (uintptr_t)w->buffer->data : 0));
+                ensureShadowBufferData(w->buffer);
+                current = (char*)((uintptr_t)w->pointer + ((w->buffer) ? (uintptr_t)w->buffer->data : 0));
                     int stride = w->stride;
                     if (!stride) stride = gl_sizeof(w->type) * w->size;
                     current += (glstate->instanceID / w->divisor) * stride;

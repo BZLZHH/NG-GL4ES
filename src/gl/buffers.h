@@ -4,6 +4,27 @@
 #include "khash.h"
 #include "../config.h"
 #include "gles.h"
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    size_t offset;
+    size_t size;
+} range_t;
+
+typedef struct {
+    range_t *data;
+    size_t   size;
+    size_t   capacity;
+} vec_range_t;
+
+void vec_range_init(vec_range_t *vec);
+int vec_range_push_back(vec_range_t *vec, range_t value);
+int vec_range_resize(vec_range_t *vec, size_t new_size);
+void vec_range_clear(vec_range_t *vec);
+void vec_range_free(vec_range_t *vec);
+range_t *vec_range_at(vec_range_t *vec, size_t idx);
+int vec_range_merge_fast(vec_range_t *vec);
 
 // VBO *****************
 typedef struct {
@@ -18,21 +39,14 @@ typedef struct {
     GLintptr offset;
     GLsizeiptr length;
     GLvoid* data;
-    int persistent_mapping;
-    int coherent_mapping;
     GLbitfield flags;
-    int is_mapped;
-    GLvoid* persistent_ptr;
-    GLsizeiptr mapped_size;
-    GLintptr mapped_offset;
-    int mapping_flags;
-    GLvoid* original_data;
-
+    vec_range_t shadow_data_dirty_ranges; // should be std::vector<range_t>
 } glbuffer_t;
 
 KHASH_MAP_DECLARE_INT(buff, glbuffer_t*);
 
 void bindBuffer(GLenum target, GLuint buffer);
+void ensureShadowBufferData(glbuffer_t* buff);
 
 void APIENTRY_GL4ES gl4es_glGenBuffers(GLsizei n, GLuint* buffers);
 void APIENTRY_GL4ES gl4es_glBindBuffer(GLenum target, GLuint buffer);

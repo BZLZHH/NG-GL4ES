@@ -297,6 +297,7 @@ void APIENTRY_GL4ES gl4es_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei 
 
     GLvoid* dst = data;
     if (glstate->vao->pack) {
+        ensureShadowBufferData(glstate->vao->pack);
         dst = (char*)dst + (uintptr_t)glstate->vao->pack->data;
     }
 
@@ -369,7 +370,10 @@ void APIENTRY_GL4ES gl4es_glGetTexImage(GLenum target, GLint level, GLenum forma
                   PrintEnum(format), PrintEnum(type), img, bound->glname, width, height);)
 
     GLvoid* dst = img;
-    if (glstate->vao->pack) dst = (char*)dst + (uintptr_t)glstate->vao->pack->data;
+    if (glstate->vao->pack) {
+        ensureShadowBufferData(glstate->vao->pack);
+        dst = (char*)dst + (uintptr_t)glstate->vao->pack->data;
+    }
 #ifdef TEXSTREAM
     if (globals4es.texstream && bound->streamed) {
         noerrorShim();

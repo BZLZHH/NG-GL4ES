@@ -1,5 +1,6 @@
 #include "../glx/hardext.h"
 #include "array.h"
+#include "buffers.h"
 #include "gl4es.h"
 #include "enum_info.h"
 #include "fpe.h"
@@ -513,6 +514,8 @@ void APIENTRY_GL4ES gl4es_glDrawRangeElements(GLenum mode, GLuint start, GLuint 
     GLuint* iindices = NULL;
     bool need_free =
         !((type == GL_UNSIGNED_SHORT) || (!compiling && !intercept && type == GL_UNSIGNED_INT && hardext.elementuint));
+
+    ensureShadowBufferData(glstate->vao->elements);
     if (need_free) {
         sindices = copy_gl_array(
             (glstate->vao->elements) ? (void*)((char*)glstate->vao->elements->data + (uintptr_t)indices) : indices,
@@ -626,6 +629,8 @@ void APIENTRY_GL4ES gl4es_glDrawElements(GLenum mode, GLsizei count, GLenum type
     GLuint old_index = 0;
     bool need_free =
         !((type == GL_UNSIGNED_SHORT) || (!compiling && !intercept && type == GL_UNSIGNED_INT && hardext.elementuint));
+
+    ensureShadowBufferData(glstate->vao->elements);
     if (need_free) {
         sindices = copy_gl_array(
             (glstate->vao->elements) ? (void*)((char*)glstate->vao->elements->data + (uintptr_t)indices) : indices,
@@ -986,6 +991,7 @@ void internal_glDrawElementsBaseVertex_gles30(GLenum mode, GLsizei count, GLenum
     GLushort* sindices = NULL;
     GLuint* iindices = NULL;
 
+    ensureShadowBufferData(glstate->vao->elements);
     const void* current_indices =
         (glstate->vao->elements) ? (void*)((char*)glstate->vao->elements->data + (uintptr_t)indices) : indices;
 
@@ -1167,6 +1173,7 @@ void internal_glMultiDrawElementsBaseVertex_gles30(GLenum mode, const GLsizei* c
         GLuint* iindices = NULL;
 
         // Get the pointer to the indices for the current draw call.
+        ensureShadowBufferData(glstate->vao->elements);
         const void* current_indices = (glstate->vao->elements)
                                           ? (void*)((char*)glstate->vao->elements->data + (uintptr_t)indices[i])
                                           : indices[i];
@@ -1334,6 +1341,7 @@ void APIENTRY_GL4ES gl4es_glDrawRangeElementsBaseVertex(GLenum mode, GLuint star
         noerrorShim();
         GLushort* sindices = NULL;
         GLuint* iindices = NULL;
+        ensureShadowBufferData(glstate->vao->elements);
         if (type == GL_UNSIGNED_INT && hardext.elementuint && !compiling && !intercept)
             iindices = copy_gl_array(
                 (glstate->vao->elements) ? (void*)((char*)glstate->vao->elements->data + (uintptr_t)indices) : indices,
@@ -1535,6 +1543,7 @@ void APIENTRY_GL4ES gl4es_glDrawElementsInstanced(GLenum mode, GLsizei count, GL
     GLuint old_index = 0;
     bool need_free =
         !((type == GL_UNSIGNED_SHORT) || (!compiling && !intercept && type == GL_UNSIGNED_INT && hardext.elementuint));
+    ensureShadowBufferData(glstate->vao->elements);
     if (need_free) {
         sindices = copy_gl_array(
             (glstate->vao->elements) ? ((void*)((char*)glstate->vao->elements->data + (uintptr_t)indices)) : indices,
@@ -1651,6 +1660,7 @@ void APIENTRY_GL4ES gl4es_glDrawElementsInstancedBaseVertex(GLenum mode, GLsizei
         GLushort* sindices = NULL;
         GLuint* iindices = NULL;
 
+        ensureShadowBufferData(glstate->vao->elements);
         if (type == GL_UNSIGNED_INT && hardext.elementuint && !compiling && !intercept)
             iindices = copy_gl_array(
                 (glstate->vao->elements) ? (void*)((char*)glstate->vao->elements->data + (uintptr_t)indices) : indices,

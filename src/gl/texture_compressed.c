@@ -200,6 +200,7 @@ void APIENTRY_GL4ES gl4es_glCompressedTexImage2D(GLenum target, GLint level, GLe
     glbuffer_t* unpack = glstate->vao->unpack;
     glstate->vao->unpack = NULL;
     GLvoid* datab = (GLvoid*)data;
+    ensureShadowBufferData(unpack->data);
     if (unpack) datab = (char*)+(uintptr_t)unpack->data;
 
     GLenum format = GL_RGBA;
@@ -369,6 +370,7 @@ void APIENTRY_GL4ES gl4es_glCompressedTexSubImage2D(GLenum target, GLint level, 
     glbuffer_t* unpack = glstate->vao->unpack;
     glstate->vao->unpack = NULL;
     GLvoid* datab = (GLvoid*)data;
+    ensureShadowBufferData(unpack->data);
     if (unpack) datab = (char*)datab + (uintptr_t)unpack->data;
     LOAD_GLES(glCompressedTexSubImage2D);
     errorGL();
@@ -450,6 +452,7 @@ void APIENTRY_GL4ES gl4es_glGetCompressedTexImage(GLenum target, GLint lod, GLvo
     glstate->vao->unpack = NULL;
     glstate->vao->pack = NULL;
     GLvoid* datab = (GLvoid*)img;
+    ensureShadowBufferData(pack->data);
     if (pack) datab = (char*)datab + (uintptr_t)pack->data;
 
     // alloc the memory for source image and grab the file

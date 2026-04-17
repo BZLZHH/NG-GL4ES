@@ -2129,6 +2129,7 @@ void old_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
         type = GL_UNSIGNED_BYTE;
 
     GLvoid* datab = (GLvoid*)data;
+    ensureShadowBufferData(glstate->vao->unpack);
     if (glstate->vao->unpack) datab = (char*)datab + (uintptr_t)glstate->vao->unpack->data;
     GLvoid* pixels = (GLvoid*)datab;
 
