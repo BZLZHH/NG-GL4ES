@@ -8,13 +8,13 @@
 #include "gl4es.h"
 #include "gles.h"
 
-#define p(a) \
-    case a: return #a
+#define p(a)                                                                                                           \
+    case a:                                                                                                            \
+        return #a
 
 const char* PrintEnum(GLenum what) {
     static char fallback[64];
-    switch(what)
-    {
+    switch (what) {
         // error
         p(GL_INVALID_ENUM);
         p(GL_INVALID_VALUE);
@@ -382,8 +382,8 @@ const char* PrintEnum(GLenum what) {
         p(GL_PROGRAM_TEX_INSTRUCTIONS_ARB);
         p(GL_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB);
         p(GL_PROGRAM_TEX_INDIRECTIONS_ARB);
-        default:
-            sprintf(fallback, "0x%04X", what);
+    default:
+        sprintf(fallback, "0x%04X", what);
     }
     return fallback;
 }
@@ -395,10 +395,8 @@ const char* PrintEGLError(int onlyerror) {
     LOAD_EGL(eglGetError);
     static char fallback[64];
     GLenum what = egl_eglGetError();
-    if(onlyerror && what==EGL_SUCCESS)
-        return NULL;
-    switch(what)
-    {
+    if (onlyerror && what == EGL_SUCCESS) return NULL;
+    switch (what) {
         p(EGL_SUCCESS);
         p(EGL_NOT_INITIALIZED);
         p(EGL_BAD_ACCESS);
@@ -414,19 +412,19 @@ const char* PrintEGLError(int onlyerror) {
         p(EGL_BAD_NATIVE_PIXMAP);
         p(EGL_BAD_NATIVE_WINDOW);
         p(EGL_CONTEXT_LOST);
-        default:
-            sprintf(fallback, "0x%04X", what);
+    default:
+        sprintf(fallback, "0x%04X", what);
     }
     return fallback;
 #endif
 }
 
 void CheckGLError(int fwd) {
+    DBG(SHUT_LOGD("CheckGLError called"))
     LOAD_GLES(glGetError);
-    GLenum err=gles_glGetError();
-    if(err!=GL_NO_ERROR) {
-        SHUT_LOGD("LIBGL: glGetError(): %s\n", PrintEnum(err));
-        if(fwd)
-            errorShim(err);
+    GLenum err = gles_glGetError();
+    if (err != GL_NO_ERROR) {
+        DBG(SHUT_LOGD("LIBGL: glGetError(): %s", PrintEnum(err)));
+        if (fwd) errorShim(err);
     }
 }

@@ -15,6 +15,7 @@ extern "C"
 #include "state.h"
 #include "stack.h"
 #include "stencil.h"
+#include "init.h"
 
     struct glstate_s {
         int dummy[16]; // dummy zone, test for memory overwriting...
@@ -23,8 +24,8 @@ extern "C"
         map_grid_t map_grid[2];
         map_states_t map1, map2;
         khash_t(gllisthead) * headlists; // shared
-        texgen_state_t texgen[MAX_TEX];
-        texenv_state_t texenv[MAX_TEX];
+        texgen_state_t texgen[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
+        texenv_state_t texenv[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
         texture_state_t texture;
         GLboolean colormask[4];
         int render_mode;
@@ -52,7 +53,7 @@ extern "C"
         GLfloat* vertex;                 // shortcut to actual vavalue...
         GLfloat* color;
         GLfloat* secondary;
-        GLfloat* texcoord[MAX_TEX];
+        GLfloat* texcoord[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
         GLfloat* normal;
         GLfloat* fogcoord; // last shortcut
         int type_error;
@@ -66,7 +67,7 @@ extern "C"
         int bound_changed;     // 0 if not changed or max TMU if changed...
         int fpe_bound_changed; // same but for fpe
 #ifdef TEXSTREAM
-        int bound_stream[MAX_TEX]; // should be shared too
+        int bound_stream[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION]; // should be shared too
 #endif
         int emulatedPixmap;
         int emulatedWin;
@@ -104,7 +105,7 @@ extern "C"
         int merger_cap;
         GLfloat* merger_master;
         GLfloat* merger_secondary;
-        GLfloat* merger_tex[MAX_TEX - 2];
+        GLfloat* merger_tex[(MAX_TEX - 2) * TEXTURE_IMAGE_MAGNIFICATION];
         int merger_indice_cap;
         GLushort* merger_indices;
         int merger_used;
@@ -121,10 +122,10 @@ extern "C"
         int num_extensions;
         GLubyte** extensions_list;
         // Texture adjust helper
-        void* helper_tex[MAX_TEX];
-        int helper_texlen[MAX_TEX];
-        GLfloat* texgened[MAX_TEX];
-        int texgenedsz[MAX_TEX];
+        void* helper_tex[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
+        int helper_texlen[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
+        GLfloat* texgened[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
+        int texgenedsz[MAX_TEX * TEXTURE_IMAGE_MAGNIFICATION];
         // Sampler
         samplers_t samplers;
         // Queries

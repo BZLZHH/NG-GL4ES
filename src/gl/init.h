@@ -4,6 +4,8 @@
 #if defined(PANDORA)
 #define USE_FBIO 1
 #endif
+#define GL4ES_AUTOMIPMAP_PLACEHOLDER 1
+#define TEXTURE_IMAGE_MAGNIFICATION 2
 
 typedef struct _globals4es {
     int nobanner;
@@ -17,7 +19,7 @@ typedef struct _globals4es {
     int usepbuffer;
     int showfps;
     int vsync;
-    int automipmap;
+    // int automipmap;
     int texcopydata;
     int tested_env;
     int texshrink;

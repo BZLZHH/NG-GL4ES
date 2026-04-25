@@ -115,12 +115,11 @@ void GetHardwareExtensions(int notest) {
     hardext.maxplanes = 6;
     hardext.maxdrawbuffers = 1;
 
-    hardext.esversion = globals4es.es;
     if (notest) {
 #ifndef AMIGAOS4
         SHUT_LOGD("Hardware test disabled, nothing activated...");
 #endif
-        if (hardext.esversion >= 2) {
+        if (globals4es.es >= 2) {
             hardext.maxteximage = 4;
             hardext.maxvarying = 8;
             hardext.maxtex = 8;
@@ -275,6 +274,20 @@ void GetHardwareExtensions(int notest) {
     LOAD_GLES(glGetString);
     LOAD_GLES(glGetIntegerv);
     LOAD_GLES(glGetError);
+
+    // gles version detection
+    const char* verStr = (const char*)gles_glGetString(GL_VERSION);
+    if (verStr) {
+        sscanf(verStr, "OpenGL ES %d", &hardext.esversion);
+    } else {
+        hardext.esversion = globals4es.es;
+    }
+
+    if (hardext.esversion != globals4es.es) {
+        SHUT_LOGD("Real GLES major version: %d", hardext.esversion);
+        globals4es.es = hardext.esversion;
+    }
+
     // Now get extensions
     const char* Exts = (const char*)gles_glGetString(GL_EXTENSIONS);
 // Parse them!

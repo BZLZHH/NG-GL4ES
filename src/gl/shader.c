@@ -25,7 +25,8 @@ KHASH_MAP_IMPL_INT(shaderlist, shader_t*);
 GLuint APIENTRY_GL4ES gl4es_glCreateShader(GLenum shaderType) {
     DBG(SHUT_LOGD("glCreateShader(%s)\n", PrintEnum(shaderType)))
     // sanity check
-    if (shaderType != GL_VERTEX_SHADER && shaderType != GL_FRAGMENT_SHADER  && shaderType != GL_GEOMETRY_SHADER) {
+    if (shaderType != GL_VERTEX_SHADER && shaderType != GL_FRAGMENT_SHADER && shaderType != GL_GEOMETRY_SHADER &&
+        shaderType != GL_COMPUTE_SHADER) {
         DBG(SHUT_LOGD("Invalid shader type\n"))
         errorShim(GL_INVALID_ENUM);
         return 0;
@@ -135,8 +136,8 @@ void APIENTRY_GL4ES gl4es_glCompileShader(GLuint shader) {
             GLint status = 0;
             gles_glGetShaderiv(glshader->id, GL_COMPILE_STATUS, &status);
             if (status != GL_TRUE) {
-                DBG(SHUT_LOGD("LIBGL: Error while compiling shader %d. Original source is:\n%s\n=======\n", glshader->id,
-                          glshader->source);)
+                DBG(SHUT_LOGD("LIBGL: Error while compiling shader %d. Original source is:\n%s\n=======\n",
+                              glshader->id, glshader->source);)
                 DBG(SHUT_LOGD("ShaderConv Source is:\n%s\n=======\n", glshader->converted);)
                 char tmp[500];
                 GLint length;
@@ -180,7 +181,7 @@ char* replace_version_line(const char* text) {
 
     const char* line_start = text;
     const char* p = text;
-    const char* replace_str = "#version 150 compatibility\n";
+    const char* replace_str = "#version 330 compatibility\n";
     size_t replace_len = strlen(replace_str);
 
     while (*p) {
@@ -211,7 +212,7 @@ char* replace_version_line(const char* text) {
     return strdup(text);
 }
 
-char* replace_version_line_460(const char* text) {
+char* replace_version_line_460(char* text) {
     const char* new_version = "#version 460\n";
     if (!text || !new_version) return NULL;
 
@@ -721,14 +722,61 @@ char* bsl_patch(const char* glsl) {
     return cur;
 }
 
+static char* replace_version_to_es(const char* text, int esversion) {
+    if (!text) return NULL;
+    char new_version[50];
+    snprintf(new_version, 50, "#version %d es\n", esversion);
+    const char* p = text;
+    const char* line_start = text;
+    size_t text_len = strlen(text);
+    while (*p) {
+        const char* line_end = strchr(p, '\n');
+        const char* next_line = NULL;
+        if (line_end) {
+            next_line = line_end + 1;
+        } else {
+            line_end = text + text_len;
+            next_line = line_end;
+        }
+        const char* cur = p;
+        while (cur < line_end && isspace((unsigned char)*cur) && *cur != '\n' && *cur != '\r')
+            cur++;
+        if (strncmp(cur, "#version", 8) == 0) {
+            size_t prefix_len = p - text;
+            size_t line_len = next_line - p;
+            size_t suffix_len = text_len - (next_line - text);
+            size_t new_total = prefix_len + strlen(new_version) + suffix_len;
+            char* out = (char*)malloc(new_total + 1);
+            if (!out) return NULL;
+            memcpy(out, text, prefix_len);
+            memcpy(out + prefix_len, new_version, strlen(new_version));
+            memcpy(out + prefix_len + strlen(new_version), next_line, suffix_len);
+            out[new_total] = '\0';
+            return out;
+        }
+        p = next_line;
+    }
+    return strdup(text);
+}
+
+void set_es_version();
 void APIENTRY_GL4ES gl4es_glShaderSource(GLuint shader, GLsizei count, const GLchar* const* string,
                                          const GLint* length) {
+    if (!globals4es.esversion) set_es_version();
     DBG(SHUT_LOGD("glShaderSource(%d, %d, %p, %p)\n", shader, count, string, length))
     // sanity check
-    if (count <= 0) {
+    if (count <= 0 || !string) {
         errorShim(GL_INVALID_VALUE);
         return;
     }
+
+    for (int i = 0; i < count; i++) {
+        if (!string[i]) {
+            errorShim(GL_INVALID_VALUE);
+            return;
+        }
+    }
+
     CHECK_SHADER(void, shader)
     // get the size of the shader sources and than concatenate in a single string
     int l = 0;
@@ -762,7 +810,7 @@ void APIENTRY_GL4ES gl4es_glShaderSource(GLuint shader, GLsizei count, const GLc
                 glshader->source = replace_version_line(glshader->source);
                 glsl_version = 460;
             }
-            if (glsl_version < 140 || globals4es.esversion < 300) {
+            if (glsl_version < 140 || (globals4es.es < 3 && globals4es.esversion < 300)) {
                 glshader->converted = strdup(ConvertShaderConditionally(glshader));
                 glshader->is_converted_essl_320 = 0;
             } else {
@@ -770,9 +818,11 @@ void APIENTRY_GL4ES gl4es_glShaderSource(GLuint shader, GLsizei count, const GLc
                     // bool isBSL = first_three_lines_contains_BSL(glshader->source);
                     bool isBuiltInVariableConverted = is_glsl_builtin_converted(glshader->source);
                     remove_before_version(glshader->source);
-                    char* convertedSource =
-                        ConvertShaderBuiltInVariableOnly(glshader->source, glshader->type == GL_VERTEX_SHADER ? 1 : 0,
-                                                         &glshader->need, isBuiltInVariableConverted ? 0 : 1);
+                    char* convertedSource = glshader->source;
+                    if (!isBuiltInVariableConverted)
+                        convertedSource = ConvertShaderBuiltInVariableOnly(
+                            convertedSource, glshader->type == GL_VERTEX_SHADER ? 1 : 0, &glshader->need,
+                            isBuiltInVariableConverted ? 0 : 1);
                     free(glshader->source);
                     if (glshader->type == GL_FRAGMENT_SHADER) {
                         if (contains_glFragColor(glshader->source)) {
@@ -885,10 +935,20 @@ void APIENTRY_GL4ES gl4es_glShaderSource(GLuint shader, GLsizei count, const GLc
             // === END ULTIMATE FIXUP PATCH v10
             // ===================================================================
         }
-        // send source to GLES2 hardware if any
-        gles_glShaderSource(
-            shader, 1, (const GLchar* const*)((glshader->converted) ? (&glshader->converted) : (&glshader->source)),
-            NULL);
+
+        GLchar* finalSource = (glshader->converted) ? glshader->converted : glshader->source;
+        char* tempSource = NULL;
+        if (globals4es.es >= 3 && globals4es.esversion >= 300 && glshader->is_converted_essl_320) {
+            char* esSource = replace_version_to_es(finalSource, globals4es.esversion);
+            if (esSource) {
+                tempSource = esSource;
+                finalSource = esSource;
+            }
+        }
+        const GLchar* sources[] = {finalSource};
+        gles_glShaderSource(shader, 1, sources, NULL);
+        if (tempSource) free(tempSource);
+
         errorGL();
     } else
         noerrorShim();
@@ -1021,10 +1081,10 @@ void APIENTRY_GL4ES gl4es_glGetShaderInfoLog(GLuint shader, GLsizei maxLength, G
     DBG(SHUT_LOGD("glGetShaderInfoLog(%d, %d, %p, %p)\n", shader, maxLength, length, infoLog))
     // find shader
     CHECK_SHADER(void, shader)
-    //if (maxLength <= 0) {
-    //    errorShim(GL_INVALID_OPERATION);
-    //    return;
-    //}
+    // if (maxLength <= 0) {
+    //     errorShim(GL_INVALID_OPERATION);
+    //     return;
+    // }
     LOAD_GLES2(glGetShaderInfoLog);
     if (gles_glGetShaderInfoLog) {
         gles_glGetShaderInfoLog(glshader->id, maxLength, length, infoLog);

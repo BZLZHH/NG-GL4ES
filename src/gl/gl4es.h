@@ -32,13 +32,13 @@ extern "C"
     {                                                                                                                  \
         int error;                                                                                                     \
         while ((error = glGetError())) {}                                                                              \
-        code if ((error = glGetError())) SHUT_LOGD(#code " -> %i\n", error);                                           \
+        code if ((error = glGetError())) DBG(SHUT_LOGD(#code " -> %i\n", error);)                                      \
     }
 
 #define printError(file, line)                                                                                         \
     {                                                                                                                  \
         int error;                                                                                                     \
-        if ((error = glGetError())) SHUT_LOGD(file ":%i -> %i\n", line, error);                                        \
+        if ((error = glGetError())) DBG(SHUT_LOGD(file ":%i -> %i\n", line, error);)                                   \
     }
 
 #define FLUSH_BEGINEND                                                                                                 \

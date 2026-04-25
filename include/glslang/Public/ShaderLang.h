@@ -156,8 +156,9 @@ typedef enum {
     EShTargetVulkan_1_1 = (1 << 22) | (1 << 12),      // Vulkan 1.1
     EShTargetVulkan_1_2 = (1 << 22) | (2 << 12),      // Vulkan 1.2
     EShTargetVulkan_1_3 = (1 << 22) | (3 << 12),      // Vulkan 1.3
+    EShTargetVulkan_1_4 = (1 << 22) | (4 << 12),      // Vulkan 1.4
     EShTargetOpenGL_450 = 450,                        // OpenGL
-    LAST_ELEMENT_MARKER(EShTargetClientVersionCount = 5),
+    LAST_ELEMENT_MARKER(EShTargetClientVersionCount = 6),
 } EShTargetClientVersion;
 
 typedef EShTargetClientVersion EshTargetClientVersion;
@@ -272,6 +273,7 @@ enum EShMessages : unsigned {
     EShMsgAbsolutePath         = (1 << 16), // Output Absolute path for messages
     EShMsgDisplayErrorColumn   = (1 << 17), // Display error message column aswell as line
     EShMsgLinkTimeOptimization = (1 << 18), // perform cross-stage optimizations during linking
+    EShMsgValidateCrossStageIO = (1 << 19), // validate shader inputs have matching outputs in previous stage
     LAST_ELEMENT_MARKER(EShMsgCount),
 };
 
@@ -893,6 +895,7 @@ public:
     // call first, to do liveness analysis, index mapping, etc.; returns false on failure
     GLSLANG_EXPORT bool buildReflection(int opts = EShReflectionDefault);
     GLSLANG_EXPORT unsigned getLocalSize(int dim) const;                  // return dim'th local size
+    GLSLANG_EXPORT unsigned getTileShadingRateQCOM(int dim) const;        // return dim'th tile shading rate QCOM
     GLSLANG_EXPORT int getReflectionIndex(const char *name) const;
     GLSLANG_EXPORT int getReflectionPipeIOIndex(const char* name, const bool inOrOut) const;
     GLSLANG_EXPORT int getNumUniformVariables() const;

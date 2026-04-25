@@ -7,9 +7,21 @@
 #include "../logs.h"
 #include "../init.h"
 
+// #define DEBUG
+#ifdef DEBUG
+#define DBG(a) a
+#define DBGLOGD(...) SHUT_LOGD(__VA_ARGS__)
+#else
+#define DBG(a)
+#define DBGLOGD(...)                                                                                                   \
+    {}
+#endif
+
 #define STUB(ret, def, args)                                                                                           \
     ret APIENTRY_GL4ES gl4es_##def args {                                                                              \
-        if (!globals4es.silentstub) SHUT_LOGD("stub: %s;\n", #def);                                                    \
+        if (!globals4es.silentstub) {                                                                                  \
+            DBG(SHUT_LOGD("stub: %s;\n", #def);)                                                                       \
+        }                                                                                                              \
     }                                                                                                                  \
     AliasExport(ret, def, , args);
 

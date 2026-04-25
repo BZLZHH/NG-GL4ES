@@ -154,8 +154,8 @@ gltexture_t* gl4es_getTexture(GLenum target, GLuint texture) {
         DBG(SHUT_LOGD("getTexture(%s, %u), failed, creating texture %u\n", PrintEnum(target), texture, tex->glname);)
         tex->target = target;
         tex->adjustxy[0] = tex->adjustxy[1] = 1.f;
-        tex->mipmap_auto = (globals4es.automipmap == 1);
-        tex->mipmap_need = (globals4es.automipmap == 1) ? 1 : 0;
+        tex->mipmap_auto = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1);
+        tex->mipmap_need = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) ? 1 : 0;
         tex->base_level = -1;
         tex->max_level = -1;
         tex->streamingID = -1;
@@ -176,8 +176,12 @@ void APIENTRY_GL4ES gl4es_glBindTexture(GLenum target, GLuint texture) {
     DBG(SHUT_LOGD("glBindTexture(%s, %u), active=%i, client=%i, list.active=%p (compiling=%d, pending=%d)\n",
                   PrintEnum(target), texture, glstate->texture.active, glstate->texture.client, glstate->list.active,
                   glstate->list.compiling, glstate->list.pending);)
-    if (target == GL_TEXTURE_BUFFER) {
+    if (target == GL_TEXTURE_BUFFER || target == GL_TEXTURE_3D) {
+        if (target == GL_TEXTURE_3D) {
+            glstate->texture.bound[glstate->texture.active][ENABLED_TEX3D] = gl4es_getTexture(target, texture);
+        }
         LOAD_GLES(glBindTexture);
+        realize_active();
         gles_glBindTexture(target, texture);
         return;
     }
@@ -224,6 +228,16 @@ void APIENTRY_GL4ES gl4es_glBindTexture(GLenum target, GLuint texture) {
         }
     }
 }
+
+void APIENTRY_GL4ES gl4es_glBindImageTexture(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer,
+                                             GLenum access, GLenum format) {
+    noerrorShim();
+    DBG(SHUT_LOGD("glBindImageTexture(%u, %u, %d, %d, %d, %s, %s)\n", unit, texture, level, layered, layer,
+                  PrintEnum(access), PrintEnum(format)););
+    LOAD_GLES3(glBindImageTexture);
+    gles_glBindImageTexture(unit, texture, level, layered, layer, access, format);
+}
+
 int is_mipmap_needed(glsampler_t* sampler) {
     switch (sampler->min_filter) {
     case GL_NEAREST_MIPMAP_NEAREST:
@@ -238,7 +252,7 @@ int is_mipmap_needed(glsampler_t* sampler) {
 
 GLenum get_texture_min_filter(gltexture_t* texture, glsampler_t* sampler) {
     GLenum ret = sampler->min_filter;
-    if ((globals4es.automipmap == 3) || ((globals4es.automipmap == 1) && (texture->mipmap_auto == 0)) ||
+    if ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 3) || ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) && (texture->mipmap_auto == 0)) ||
         (texture->compressed && (texture->mipmap_auto == 0))) {
         switch (ret) {
         case GL_NEAREST_MIPMAP_NEAREST:
@@ -291,7 +305,7 @@ void APIENTRY_GL4ES gl4es_glTexParameterfv(GLenum target, GLenum pname, const GL
     DBG(SHUT_LOGD("glTexParameterfv(%s, %s, [%f(%s)...])\n", PrintEnum(target), PrintEnum(pname), params[0],
                   PrintEnum(params[0]));)
 
-    if (target == GL_TEXTURE_BUFFER) {
+    if (target == GL_TEXTURE_BUFFER || target == GL_TEXTURE_3D) {
         LOAD_GLES(glTexParameterfv);
         gles_glTexParameterfv(target, pname, params);
         return;
@@ -332,7 +346,7 @@ void APIENTRY_GL4ES gl4es_glTexParameterfv(GLenum target, GLenum pname, const GL
         case GL_TEXTURE_LOD_BIAS:
             return; // not on GLES
         case GL_GENERATE_MIPMAP:
-            if (globals4es.automipmap == 3) return;                // no mipmap, so no need to generate any
+            if (GL4ES_AUTOMIPMAP_PLACEHOLDER == 3) return;         // no mipmap, so no need to generate any
             if (texture->mipmap_auto == ((param) ? 1 : 0)) return; // same value...
             texture->mipmap_auto = (param) ? 1 : 0;
             if (hardext.esversion > 1) {
@@ -408,7 +422,11 @@ void APIENTRY_GL4ES gl4es_glDeleteTextures(GLsizei n, const GLuint* textures) {
                         glstate->actual_tex2d[a] = 0;
                         found = 1;
                     }
-                    if (found) glstate->bound_changed = a + 1;
+                    if (found) {
+                        glstate->bound_changed = a + 1;
+                        if (glstate->fpe_state && glstate->fpe_bound_changed < a + 1)
+                            glstate->fpe_bound_changed = a + 1;
+                    }
                 }
                 gles_glDeleteTextures(1, &tex->glname);
                 // check if renderbuffer where associeted
@@ -459,8 +477,8 @@ void APIENTRY_GL4ES gl4es_glGenTextures(GLsizei n, GLuint* textures) {
             tex->texture = textures[i];
             tex->glname = textures[i];
             tex->adjustxy[0] = tex->adjustxy[1] = 1.f;
-            tex->mipmap_auto = (globals4es.automipmap == 1);
-            tex->mipmap_need = (globals4es.automipmap == 1) ? 1 : 0;
+            tex->mipmap_auto = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1);
+            tex->mipmap_need = (GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) ? 1 : 0;
             tex->streamingID = -1;
             tex->base_level = -1;
             tex->max_level = -1;
@@ -489,7 +507,7 @@ void APIENTRY_GL4ES gl4es_glGetTexLevelParameterfv(GLenum target, GLint level, G
     // simplification: (mostly) not taking "target" into account here
     FLUSH_BEGINEND;
 
-    if (target == GL_TEXTURE_BUFFER) {
+    if (target == GL_TEXTURE_BUFFER || target == target == GL_TEXTURE_3D) {
         LOAD_GLES(glGetTexLevelParameterfv);
         gles_glGetTexLevelParameterfv(target, level, pname, params);
         return;
@@ -610,8 +628,8 @@ void APIENTRY_GL4ES gl4es_glGetTexLevelParameterfv(GLenum target, GLint level, G
 
         default:
             errorShim(GL_INVALID_ENUM); // Wrong here...
-            SHUT_LOGD("Stubbed glGetTexLevelParameteriv(%s, %i, %s, %p)\n", PrintEnum(target), level, PrintEnum(pname),
-                      params);
+            DBG(SHUT_LOGD("Stubbed glGetTexLevelParameteriv(%s, %i, %s, %p)\n", PrintEnum(target), level,
+                          PrintEnum(pname), params);)
         }
     }
 }
@@ -944,7 +962,8 @@ void realize_textures(int drawing) {
         }
         // check, if drawing, if mipmap needs some special care...
         if (drawing) {
-            if ((globals4es.automipmap == 3) || ((globals4es.automipmap == 1) && (tex->mipmap_auto == 0)) ||
+            if ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 3) ||
+                ((GL4ES_AUTOMIPMAP_PLACEHOLDER == 1) && (tex->mipmap_auto == 0)) ||
                 (tex->compressed && (tex->mipmap_auto == 0)))
                 tex->mipmap_need = 0;
             else
@@ -965,6 +984,8 @@ void realize_textures(int drawing) {
 
 // Direct wrapper
 AliasExport(void, glBindTexture, , (GLenum target, GLuint texture));
+AliasExport(void, glBindImageTexture, ,
+            (GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format));
 AliasExport(void, glGenTextures, , (GLsizei n, GLuint* textures));
 AliasExport(void, glDeleteTextures, , (GLsizei n, const GLuint* textures));
 AliasExport(void, glTexParameteri, , (GLenum target, GLenum pname, GLint param));

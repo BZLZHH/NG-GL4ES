@@ -387,6 +387,11 @@ enum TOperator {
     EOpSubgroupPartitionedExclusiveXor,
 
     EOpSubgroupGuardStop,
+    
+    // Integer dot product
+    EOpDotPackedEXT,
+    EOpDotAccSatEXT,
+    EOpDotPackedAccSatEXT,
 
     EOpMinInvocations,
     EOpMaxInvocations,
@@ -466,6 +471,17 @@ enum TOperator {
     EOpTensorViewSetDimensionNV,
     EOpTensorViewSetStrideNV,
     EOpTensorViewSetClipNV,
+
+    EOpCooperativeVectorMatMulNV,
+    EOpCooperativeVectorMatMulAddNV,
+    EOpCooperativeVectorLoadNV,
+    EOpCooperativeVectorStoreNV,
+    EOpCooperativeVectorOuterProductAccumulateNV,
+    EOpCooperativeVectorReduceSumAccumulateNV,
+
+    EOpTensorReadARM,
+    EOpTensorWriteARM,
+    EOpTensorSizeARM,
 
     EOpBeginInvocationInterlock, // Fragment only
     EOpEndInvocationInterlock, // Fragment only
@@ -599,13 +615,27 @@ enum TOperator {
     EOpConstructF16Mat4x2,
     EOpConstructF16Mat4x3,
     EOpConstructF16Mat4x4,
+    EOpConstructBFloat16,
+    EOpConstructBF16Vec2,
+    EOpConstructBF16Vec3,
+    EOpConstructBF16Vec4,
+    EOpConstructFloatE5M2,
+    EOpConstructFloatE5M2Vec2,
+    EOpConstructFloatE5M2Vec3,
+    EOpConstructFloatE5M2Vec4,
+    EOpConstructFloatE4M3,
+    EOpConstructFloatE4M3Vec2,
+    EOpConstructFloatE4M3Vec3,
+    EOpConstructFloatE4M3Vec4,
     EOpConstructStruct,
     EOpConstructTextureSampler,
     EOpConstructNonuniform,     // expected to be transformed away, not present in final AST
     EOpConstructReference,
     EOpConstructCooperativeMatrixNV,
     EOpConstructCooperativeMatrixKHR,
+    EOpConstructCooperativeVectorNV,
     EOpConstructAccStruct,
+    EOpConstructSaturated,
     EOpConstructGuardEnd,
 
     //
@@ -954,6 +984,25 @@ enum TOperator {
     EOpImageBlockMatchWindowSADQCOM,
     EOpImageBlockMatchGatherSSDQCOM,
     EOpImageBlockMatchGatherSADQCOM,
+
+    // GL_NV_cluster_acceleration_structure
+    EOpRayQueryGetIntersectionClusterIdNV,
+    EOpHitObjectGetClusterIdNV,
+
+    // GL_NV_linear_swept_spheres
+    EOpRayQueryGetIntersectionSpherePositionNV,
+    EOpRayQueryGetIntersectionSphereRadiusNV,
+    EOpRayQueryGetIntersectionLSSHitValueNV,
+    EOpRayQueryGetIntersectionLSSPositionsNV,
+    EOpRayQueryGetIntersectionLSSRadiiNV,
+    EOpRayQueryIsSphereHitNV,
+    EOpRayQueryIsLSSHitNV,
+    EOpHitObjectGetSpherePositionNV,
+    EOpHitObjectGetSphereRadiusNV,
+    EOpHitObjectGetLSSPositionsNV,
+    EOpHitObjectGetLSSRadiiNV,
+    EOpHitObjectIsSphereHitNV,
+    EOpHitObjectIsLSSHitNV,
 };
 
 inline bool IsOpNumericConv(const TOperator op) {
@@ -1059,6 +1108,7 @@ public:
     virtual int getVectorSize() const { return type.getVectorSize(); }
     virtual int getMatrixCols() const { return type.getMatrixCols(); }
     virtual int getMatrixRows() const { return type.getMatrixRows(); }
+    virtual int getTensorRankARM() const { return type.getTensorRankARM(); }
     virtual bool isMatrix() const { return type.isMatrix(); }
     virtual bool isArray()  const { return type.isArray(); }
     virtual bool isVector() const { return type.isVector(); }

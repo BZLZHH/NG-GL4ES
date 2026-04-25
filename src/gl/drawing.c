@@ -935,7 +935,6 @@ void APIENTRY_GL4ES gl4es_glMultiDrawElements(GLenum mode, GLsizei* counts, GLen
     free_scratch(&scratch);
 
     realize_textures(1);
-    bindBuffer(GL_ARRAY_BUFFER, glstate->vao->vertex->real_buffer);
     bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
 
     DBG(SHUT_LOGD("gles_glDrawElements loop x%d\n", primcount);)
@@ -1061,6 +1060,10 @@ void internal_glDrawElementsBaseVertex_gles32(GLenum mode, GLsizei count, GLenum
                   PrintEnum(mode), count, PrintEnum(type), indices, basevertex, (glstate->list.active) ? 1 : 0,
                   glstate->list.pending);)
     LOAD_GLES3_OR_EXT(glDrawElementsBaseVertex);
+    if(!gles_glDrawElementsBaseVertex) {
+        DBG(SHUT_LOGD("ERR: glDrawElementsBaseVertex not available\n"));
+        return;
+    }
     gles_glDrawElementsBaseVertex(mode, count, type, indices, basevertex);
 }
 
@@ -1075,15 +1078,37 @@ void APIENTRY_GL4ES gl4es_glDrawElementsBaseVertex(GLenum mode, GLsizei count, G
     free_scratch(&scratch);
 
     realize_textures(1);
-    bindBuffer(GL_ARRAY_BUFFER, glstate->vao->vertex->real_buffer);
     bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
-
     internal_glDrawElementsBaseVertex(mode, count, type, indices, basevertex);
 }
 AliasExport(void, glDrawElementsBaseVertex, ,
             (GLenum mode, GLsizei count, GLenum type, const void* indices, GLint basevertex));
 AliasExport(void, glDrawElementsBaseVertex, ARB,
             (GLenum mode, GLsizei count, GLenum type, const void* indices, GLint basevertex));
+
+void APIENTRY_GL4ES gl4es_glDrawElementsIndirect(GLenum mode, GLenum type, const void* indirect) {
+    DBG(SHUT_LOGD("glDrawElementsIndirect(%s, %s, %p), vtx=%p map=%p, pending=%d\n", PrintEnum(mode), PrintEnum(type),
+                  indirect, (glstate->vao->vertex) ? glstate->vao->vertex->data : NULL,
+                  (glstate->vao->elements) ? glstate->vao->elements->data : NULL, glstate->list.pending);)
+    scratch_t scratch = {0};
+
+    realize_glenv(mode == GL_POINTS, 0, 0, type, indirect, &scratch);
+    free_scratch(&scratch);
+
+    realize_textures(1);
+    bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
+
+    LOAD_GLES3_OR_EXT(glDrawElementsIndirect);
+    gles_glDrawElementsIndirect(mode, type, indirect);
+}
+AliasExport(void, glDrawElementsIndirect, , (GLenum mode, GLenum type, const void* indirect));
+AliasExport(void, glDrawElementsIndirect, ARB, (GLenum mode, GLenum type, const void* indirect));
+
+void APIENTRY_GL4ES gl4es_glMemoryBarrier(GLbitfield barriers) {
+    LOAD_GLES3(glMemoryBarrier);
+    gles_glMemoryBarrier(barriers);
+}
+AliasExport(void, glMemoryBarrier, , (GLbitfield barriers));
 
 void internal_glMultiDrawElementsBaseVertex_gles32(GLenum mode, const GLsizei* counts, GLenum type,
                                                    const void* const* indices, GLsizei primcount,
@@ -1094,7 +1119,6 @@ void internal_glMultiDrawElementsBaseVertex_gles32(GLenum mode, const GLsizei* c
     free_scratch(&scratch);
 
     realize_textures(1);
-    bindBuffer(GL_ARRAY_BUFFER, glstate->vao->vertex->real_buffer);
     bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
 
     DBG(SHUT_LOGD("gles_glDrawElementsBaseVertex loop x%d\n", primcount);)
@@ -1256,7 +1280,6 @@ void gl4es_glMultiDrawElementsBaseVertex(GLenum mode, const GLsizei* counts, GLe
     free_scratch(&scratch);
 
     realize_textures(1);
-    bindBuffer(GL_ARRAY_BUFFER, glstate->vao->vertex->real_buffer);
     bindBuffer(GL_ELEMENT_ARRAY_BUFFER, glstate->vao->elements->real_buffer);
 
     if (hardext.multidraw && hardext.basevertex) {

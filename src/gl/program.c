@@ -199,6 +199,8 @@ void APIENTRY_GL4ES gl4es_glAttachShader(GLuint program, GLuint shader) {
         glprogram->last_vert = glshader;
     else if (glshader->type == GL_FRAGMENT_SHADER && !glprogram->last_frag)
         glprogram->last_frag = glshader;
+    else if (glshader->type == GL_COMPUTE_SHADER)
+        glprogram->last_comp = glshader;
     // merge uniforms_declarations
     merge_uniforms(glprogram->declarations, glshader->uniforms_declarations);
     // send to hadware
@@ -725,6 +727,11 @@ static void fill_program(program_t* glprogram) {
                         glprogram->texunits[tu_idx].type = TU_TEX2DSH;
                         glprogram->texunits[tu_idx].req_tu = glprogram->texunits[tu_idx].act_tu = 0;
                         ++tu_idx;
+                    } else if (type == GL_SAMPLER_3D) {
+                        glprogram->texunits[tu_idx].id = id;
+                        glprogram->texunits[tu_idx].type = TU_TEX3D;
+                        glprogram->texunits[tu_idx].req_tu = glprogram->texunits[tu_idx].act_tu = 0;
+                        ++tu_idx;
                     }
                     DBG(SHUT_LOGD(" uniform #%d : \"%s\"%s type=%s size=%d\n", id, gluniform->name,
                                   gluniform->builtin ? " (builtin) " : "", PrintEnum(gluniform->type), gluniform->size))
@@ -748,7 +755,8 @@ static void fill_program(program_t* glprogram) {
         uniform_t* m;
         khint_t k;
         kh_foreach(glprogram->uniform, k, m,
-                   if (m->type == GL_SAMPLER_2D || m->type == GL_SAMPLER_CUBE || m->type == GL_SAMPLER_2D_SHADOW)
+                   if (m->type == GL_SAMPLER_2D || m->type == GL_SAMPLER_CUBE || m->type == GL_SAMPLER_2D_SHADOW ||
+                       m->type == GL_SAMPLER_3D)
                        memset((char*)glprogram->cache.cache + m->cache_offs, 0xff, m->cache_size);)
     }
 
@@ -867,76 +875,78 @@ void APIENTRY_GL4ES gl4es_glLinkProgram(GLuint program) {
 
     clear_program(glprogram);
 
-    // check if attached shaders are compatible in term of varying...
-    shaderconv_need_t needs = {0};
-    needs.need_texcoord = -1;
-    // first get the compatible need
-    for (int i = 0; i < glprogram->attach_size; i++) {
-        accumShaderNeeds(glprogram->attach[i], &needs);
-    }
-    // create one vertex shader if needed!
-    if (!glprogram->last_vert) {
-        glprogram->default_need = (shaderconv_need_t*)malloc(sizeof(shaderconv_need_t));
-        memcpy(glprogram->default_need, &needs, sizeof(shaderconv_need_t));
-        glprogram->default_vertex = 1;
-        GLenum vtx = gl4es_glCreateShader(GL_VERTEX_SHADER);
-        gl4es_glShaderSource(vtx, 1, fpe_VertexShader(&needs, NULL), NULL);
-        gl4es_glCompileShader(vtx);
-        gl4es_glAttachShader(glprogram->id, vtx);
-    }
-    // create one fragment shader if needed!
-    if (!glprogram->last_frag) {
-        glprogram->default_need = (shaderconv_need_t*)malloc(sizeof(shaderconv_need_t));
-        memcpy(glprogram->default_need, &needs, sizeof(shaderconv_need_t));
-        glprogram->default_fragment = 1;
-        GLenum vtx = gl4es_glCreateShader(GL_FRAGMENT_SHADER);
-        gl4es_glShaderSource(vtx, 1, fpe_FragmentShader(&needs, NULL), NULL);
-        gl4es_glCompileShader(vtx);
-        gl4es_glAttachShader(glprogram->id, vtx);
-    }
-    int compatible = 1;
-    // now is everyone ok?
-    for (int i = 0; i < glprogram->attach_size && compatible; i++) {
-        compatible = isShaderCompatible(glprogram->attach[i], &needs);
-    }
-    // someone is not compatible, redoing shaders...
-    if (!compatible) {
-        DBG(SHUT_LOGD("Need to redo some shaders...\n"))
+    if (!glprogram->last_comp) {
+        // check if attached shaders are compatible in term of varying...
+        shaderconv_need_t needs = {0};
+        needs.need_texcoord = -1;
+        // first get the compatible need
         for (int i = 0; i < glprogram->attach_size; i++) {
-            redoShader(glprogram->attach[i], &needs);
+            accumShaderNeeds(glprogram->attach[i], &needs);
         }
-    }
-    // check if Built-in VA are used, and if so, bind them to their proper location
-
-    if (glprogram->last_vert && !glprogram->last_vert->is_converted_essl_320) {
-        for (int i = 0; i < ATT_MAX; ++i) {
-            const char* attribute = hasBuiltinAttrib(glprogram->last_vert->converted, i);
-            if (attribute) gl4es_glBindAttribLocation(glprogram->id, i, attribute);
+        // create one vertex shader if needed!
+        if (!glprogram->last_vert) {
+            glprogram->default_need = (shaderconv_need_t*)malloc(sizeof(shaderconv_need_t));
+            memcpy(glprogram->default_need, &needs, sizeof(shaderconv_need_t));
+            glprogram->default_vertex = 1;
+            GLenum vtx = gl4es_glCreateShader(GL_VERTEX_SHADER);
+            gl4es_glShaderSource(vtx, 1, fpe_VertexShader(&needs, NULL), NULL);
+            gl4es_glCompileShader(vtx);
+            gl4es_glAttachShader(glprogram->id, vtx);
         }
-    }
-    // for glBindFragDataLocation
-    if (glprogram->last_vert && glprogram->frag_data_changed == 1) {
-        LOAD_GLES2(glShaderSource);
-        LOAD_GLES2(glCompileShader);
-        LOAD_GLES2(glAttachShader);
-        if (gles_glShaderSource && gles_glCompileShader && gles_glAttachShader) {
-            gles_glShaderSource(glprogram->last_frag->id, 1, (const GLchar* const*)&glprogram->last_frag->converted,
-                                NULL);
-            gles_glCompileShader(glprogram->last_frag->id);
-            LOAD_GLES2(glGetShaderiv);
-            GLint status = 0;
-            gles_glGetShaderiv(glprogram->last_frag->id, GL_COMPILE_STATUS, &status);
-            if (status != GL_TRUE) {
-                DBG(char tmp[500]; GLint length; LOAD_GLES2(glGetShaderInfoLog);
-                    gles_glGetShaderInfoLog(glprogram->last_frag->id, 500, &length, tmp);
-                    SHUT_LOGD("Failed to compile patched shader, using default shader, log:\n%s\n", tmp);)
-                gles_glShaderSource(glprogram->last_frag->id, 1,
-                                    (const GLchar* const*)&glprogram->last_frag->before_patch, NULL);
-                gles_glCompileShader(glprogram->last_frag->id);
+        // create one fragment shader if needed!
+        if (!glprogram->last_frag) {
+            glprogram->default_need = (shaderconv_need_t*)malloc(sizeof(shaderconv_need_t));
+            memcpy(glprogram->default_need, &needs, sizeof(shaderconv_need_t));
+            glprogram->default_fragment = 1;
+            GLenum vtx = gl4es_glCreateShader(GL_FRAGMENT_SHADER);
+            gl4es_glShaderSource(vtx, 1, fpe_FragmentShader(&needs, NULL), NULL);
+            gl4es_glCompileShader(vtx);
+            gl4es_glAttachShader(glprogram->id, vtx);
+        }
+        int compatible = 1;
+        // now is everyone ok?
+        for (int i = 0; i < glprogram->attach_size && compatible; i++) {
+            compatible = isShaderCompatible(glprogram->attach[i], &needs);
+        }
+        // someone is not compatible, redoing shaders...
+        if (!compatible) {
+            DBG(SHUT_LOGD("Need to redo some shaders...\n"))
+            for (int i = 0; i < glprogram->attach_size; i++) {
+                redoShader(glprogram->attach[i], &needs);
             }
-            gles_glAttachShader(glprogram->id, glprogram->last_frag->id);
-        } else {
-            noerrorShim();
+        }
+        // check if Built-in VA are used, and if so, bind them to their proper location
+
+        if (glprogram->last_vert && !glprogram->last_vert->is_converted_essl_320) {
+            for (int i = 0; i < ATT_MAX; ++i) {
+                const char* attribute = hasBuiltinAttrib(glprogram->last_vert->converted, i);
+                if (attribute) gl4es_glBindAttribLocation(glprogram->id, i, attribute);
+            }
+        }
+        // for glBindFragDataLocation
+        if (glprogram->last_vert && glprogram->frag_data_changed == 1) {
+            LOAD_GLES2(glShaderSource);
+            LOAD_GLES2(glCompileShader);
+            LOAD_GLES2(glAttachShader);
+            if (gles_glShaderSource && gles_glCompileShader && gles_glAttachShader) {
+                gles_glShaderSource(glprogram->last_frag->id, 1, (const GLchar* const*)&glprogram->last_frag->converted,
+                                    NULL);
+                gles_glCompileShader(glprogram->last_frag->id);
+                LOAD_GLES2(glGetShaderiv);
+                GLint status = 0;
+                gles_glGetShaderiv(glprogram->last_frag->id, GL_COMPILE_STATUS, &status);
+                if (status != GL_TRUE) {
+                    DBG(char tmp[500]; GLint length; LOAD_GLES2(glGetShaderInfoLog);
+                        gles_glGetShaderInfoLog(glprogram->last_frag->id, 500, &length, tmp);
+                        DBG(SHUT_LOGD("Failed to compile patched shader, using default shader, log:\n%s\n", tmp);))
+                    gles_glShaderSource(glprogram->last_frag->id, 1,
+                                        (const GLchar* const*)&glprogram->last_frag->before_patch, NULL);
+                    gles_glCompileShader(glprogram->last_frag->id);
+                }
+                gles_glAttachShader(glprogram->id, glprogram->last_frag->id);
+            } else {
+                noerrorShim();
+            }
         }
     }
     // ok, continue with linking
@@ -961,7 +971,7 @@ void APIENTRY_GL4ES gl4es_glLinkProgram(GLuint program) {
                 LOAD_GLES2(glGetProgramInfoLog);
                 GLchar log_chars[log_length];
                 gles_glGetProgramInfoLog(glprogram->id, log_length, &log_length, log_chars);
-                SHUT_LOGD("%s", log_chars);
+                DBG(SHUT_LOGD("%s", log_chars));
             }
             // should DBG the linker error?
             DBG(SHUT_LOGD(" Link failled!\n"))
