@@ -163,7 +163,7 @@ Show/Hide initial text
 
 ##### LIBGL_NPOT
 Expose NPOT (Non Power of Two) Support
- * 0 : Default, expose the extension that are availble by the GLES backend
+ * 0 : Default, expose the extension that are available by the GLES backend
  * 1 : Expose limited NPOT extension
  * 2 : Expose GL_ARB_texture_non_power_of_two extension
 
